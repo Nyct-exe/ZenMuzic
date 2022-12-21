@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ZenMuzic</string>
+    <string name="nav_open">Open</string>
+    <string name="nav_close">Close</string>
+    <string name="set_route_button_text">Set Route</string>
+    <string name="set_music_button_text">Set Music</string>
+</resources>
