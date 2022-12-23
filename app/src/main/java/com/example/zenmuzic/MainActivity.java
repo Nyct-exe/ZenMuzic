@@ -17,8 +17,10 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -33,6 +35,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.internal.NavigationMenuItemView;
 import com.google.android.material.navigation.NavigationView;
 
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -104,14 +107,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStart() {
         super.onStart();
-        //TODO: Implement this check to redirect to google play
         /**
          *  Currently every time the app is reopened it plays the indie rock music playlist. smth to consider.
          */
         if (SpotifyAppRemote.isSpotifyInstalled(this)){
             authSpotify();
-        } else{
-
+        }else{ // if the user does not have Spotify installed it opens spotify on google play
+            // Dialog Fragment initialisation
+            new SpotifyMissingDialogFragment().show(getSupportFragmentManager(),"DialogBox");
         }
 
     }
@@ -122,6 +125,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Aaand we will finish off here.
     }
     private void authSpotify(){
+        NavigationView navigationView = findViewById(R.id.nvView);
+        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_share);
+
         //Auth
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
@@ -140,19 +146,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         SpotifyAppRemote.connect(this, connectionParams,
                 new Connector.ConnectionListener() {
-
                     @Override
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.d("MainActivity", "Connected! Yay!");
-
                         // Now you can start interacting with App Remote
+                        logoutItem.setTitle("Logout From Spotify");
                         connected();
                     }
 
                     @Override
                     public void onFailure(Throwable throwable) {
                         Log.e("MainActivity", throwable.getMessage(), throwable);
+                        logoutItem.setTitle("Login To Spotify");
 
                         // Something went wrong when attempting to connect! Handle errors here
                     }
@@ -179,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Response was successful and contains auth token
                 case TOKEN:
                     // Handle successful response
-                    Toast.makeText(this, "Connected!!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Authorised!!", Toast.LENGTH_SHORT).show();
                     break;
 
                 // Auth flow returned an error
@@ -231,32 +237,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         // TODO: Implement Navigation to Other Activities/Fragments
-        switch (item.getItemId()) {
-            case R.id.nav_settings: {
-                //do somthing
-                Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
-                break;
-            }
-            case R.id.nav_share: {
-                //do somthing
-                Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
-                break;
-            }
-            case R.id.nav_logout: {
-                //do somthing
-                if( mSpotifyAppRemote.isConnected() == false){
-                    authSpotify();
-                    item.setTitle("Logout From Spotify");
+        try {
+            switch (item.getItemId()) {
+                case R.id.nav_settings: {
+                    //do somthing
+                    Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                case R.id.nav_share: {
+                    //do somthing
+                    Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                case R.id.nav_logout: {
+                    //do somthing
+                    if( mSpotifyAppRemote.isConnected() == false){
+                        authSpotify();
+                        item.setTitle("Logout From Spotify");
 
-                } else {
-                    AuthorizationClient.clearCookies(this);
-                    SpotifyAppRemote.disconnect(mSpotifyAppRemote);
-                    item.setTitle("Login To Spotify");
-                    Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
+                    } else {
+                        AuthorizationClient.clearCookies(this);
+                        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+                        item.setTitle("Login To Spotify");
+                        Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
 
+                    }
                 }
             }
+        } catch (Exception e){
+            Toast.makeText(this, "Not Connected To Spotify", Toast.LENGTH_SHORT).show();
+            authSpotify();
         }
+
         //close navigation drawer
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;

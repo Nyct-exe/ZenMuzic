@@ -9,7 +9,7 @@
             android:title="Share Playlists"/>
         <item
             android:id="@+id/nav_logout"
-            android:title="Logout From Spotify"/>
+            android:title="Login To Spotify"/>
 
     </group>
 
