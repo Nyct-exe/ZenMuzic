@@ -13,6 +13,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -44,6 +45,7 @@ import com.spotify.protocol.types.Track;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
+import com.spotify.sdk.android.auth.LoginActivity;
 
 
 import java.util.Objects;
@@ -98,10 +100,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     }
-    //Spotify Logic
+    //Lifecycle Controls
     @Override
     protected void onStart() {
         super.onStart();
+        //TODO: Implement this check to redirect to google play
+        /**
+         *  Currently every time the app is reopened it plays the indie rock music playlist. smth to consider.
+         */
+        if (SpotifyAppRemote.isSpotifyInstalled(this)){
+            authSpotify();
+        } else{
+
+        }
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Aaand we will finish off here.
+    }
+    private void authSpotify(){
         //Auth
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
@@ -111,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
 
-    //     Set the connection parameters
+        //     Set the connection parameters
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(CLIENT_ID)
                         .setRedirectUri(REDIRECT_URI)
@@ -137,18 +157,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
-
     }
+
     // Currently just plays music on the users side
     private void connected() {
         // Then we will write some more code here.
         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Aaand we will finish off here.
     }
 
     // Spotify Login result handling
@@ -230,8 +244,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
             case R.id.nav_logout: {
                 //do somthing
-                Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
-                break;
+                if( mSpotifyAppRemote.isConnected() == false){
+                    authSpotify();
+                    item.setTitle("Logout From Spotify");
+
+                } else {
+                    AuthorizationClient.clearCookies(this);
+                    SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+                    item.setTitle("Login To Spotify");
+                    Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
+
+                }
             }
         }
         //close navigation drawer
