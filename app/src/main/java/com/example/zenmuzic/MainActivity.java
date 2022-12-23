@@ -13,6 +13,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -33,6 +34,18 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
+
+import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.PlayerState;
+import com.spotify.protocol.types.Track;
+import com.spotify.sdk.android.auth.AuthorizationClient;
+import com.spotify.sdk.android.auth.AuthorizationRequest;
+import com.spotify.sdk.android.auth.AuthorizationResponse;
+
+
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
@@ -49,6 +62,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location lastKnownLocation;
     private static final int DEFAULT_ZOOM = 15;
     private final LatLng defaultLocation = new LatLng(0, 0);
+
+    // Spotify
+    private static final int REQUEST_CODE = 1337;
+    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
+    private static final String REDIRECT_URI = "http://localhost:8888/callback";
+    private SpotifyAppRemote mSpotifyAppRemote;
 
 
 
@@ -79,6 +98,90 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     }
+    //Spotify Logic
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Auth
+        AuthorizationRequest.Builder builder =
+                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
+
+        builder.setScopes(new String[]{"streaming"});
+        AuthorizationRequest request = builder.build();
+
+        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+
+    //     Set the connection parameters
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(true)
+                        .build();
+
+        SpotifyAppRemote.connect(this, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        mSpotifyAppRemote = spotifyAppRemote;
+                        Log.d("MainActivity", "Connected! Yay!");
+
+                        // Now you can start interacting with App Remote
+                        connected();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e("MainActivity", throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
+
+    }
+    // Currently just plays music on the users side
+    private void connected() {
+        // Then we will write some more code here.
+        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Aaand we will finish off here.
+    }
+
+    // Spotify Login result handling
+    //TODO: FLESH THIS OUT
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        // Check if result comes from the correct activity
+        if (requestCode == REQUEST_CODE) {
+            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+
+            switch (response.getType()) {
+                // Response was successful and contains auth token
+                case TOKEN:
+                    // Handle successful response
+                    Toast.makeText(this, "Connected!!", Toast.LENGTH_SHORT).show();
+                    break;
+
+                // Auth flow returned an error
+                case ERROR:
+                    Toast.makeText(this, "Something Went Wrong", Toast.LENGTH_SHORT).show();
+                    // Handle error response
+                    break;
+
+                // Most likely auth flow was cancelled
+                default:
+                    Toast.makeText(this, "The Connection has been terminated", Toast.LENGTH_SHORT).show();
+                    // Handle other cases
+            }
+        }
+    }
+
 
     // Button Logic
     // TODO: Implement what happens when setMusic Button is pressed

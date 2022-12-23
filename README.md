@@ -5,4 +5,6 @@ CO4224 Mobile and Ubiquitous Computing 2022-23 SEM1 Coursework
 
 ```Google services tools```
 
+```Spotify needs to be Installed on the phone```
+
 Add MAPS_API_KEY={YOUR API KEY} to the local.properties for google maps to function properly.
