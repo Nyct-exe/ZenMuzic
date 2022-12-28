@@ -134,21 +134,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onResume() {
         super.onResume();
-        /**
-         * Updates text of SpotifyButton to show currently playing song
-         */
-        if(mSpotifyAppRemote != null){
-            // Subscribe to PlayerState
-            mSpotifyAppRemote.getPlayerApi()
-                    .subscribeToPlayerState()
-                    .setEventCallback(playerState -> {
-                        final Track track = playerState.track;
-                        if (track != null) {
-                            spotifyButton.setText(track.name + " by " + track.artist.name);
-                        }
-                    });
 
-        }
 
     }
 
@@ -193,11 +179,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 });
     }
 
-    // Currently just plays music on the users side
-    // Got annoyed that my music kept chaning while debugging.
     private void connected() {
         // Then we will write some more code here.
 //        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
+        /**
+         * Subscribes to playerState and everytime a playerstate is changed the button text is updated.
+         * Updates text of SpotifyButton to show currently playing song
+         */
+        if(mSpotifyAppRemote != null){
+            // Subscribe to PlayerState
+            mSpotifyAppRemote.getPlayerApi()
+                    .subscribeToPlayerState()
+                    .setEventCallback(playerState -> {
+                        final Track track = playerState.track;
+                        if (track != null) {
+                            spotifyButton.setText(track.name + " by " + track.artist.name);
+                        }
+                    });
+
+        }
     }
 
     // Spotify Login result handling
