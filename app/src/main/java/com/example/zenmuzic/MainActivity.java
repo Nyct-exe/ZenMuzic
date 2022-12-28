@@ -23,6 +23,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -74,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
 
+    // UI
+    private Button spotifyButton;
+
 
 
 
@@ -101,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
+        //Button Initialization
+        spotifyButton = findViewById(R.id.spotifyButton);
+
 
     }
     //Lifecycle Controls
@@ -122,8 +129,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStop() {
         super.onStop();
-        // Aaand we will finish off here.
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /**
+         * Updates text of SpotifyButton to show currently playing song
+         */
+        if(mSpotifyAppRemote != null){
+            // Subscribe to PlayerState
+            mSpotifyAppRemote.getPlayerApi()
+                    .subscribeToPlayerState()
+                    .setEventCallback(playerState -> {
+                        final Track track = playerState.track;
+                        if (track != null) {
+                            spotifyButton.setText(track.name + " by " + track.artist.name);
+                        }
+                    });
+
+        }
+
+    }
+
     private void authSpotify(){
         NavigationView navigationView = findViewById(R.id.nvView);
         MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_share);
@@ -166,9 +194,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // Currently just plays music on the users side
+    // Got annoyed that my music kept chaning while debugging.
     private void connected() {
         // Then we will write some more code here.
-        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
+//        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
     }
 
     // Spotify Login result handling
@@ -211,6 +240,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // TODO: Implement what happens when setRoute Button is pressed
     public void setRouteButton(View view){
         Toast.makeText(this, "Set Route Needs Work", Toast.LENGTH_SHORT).show();
+    }
+
+    public void backMusicButton(View view){
+        if(mSpotifyAppRemote != null){
+            mSpotifyAppRemote.getPlayerApi().skipPrevious();
+        }
+    }
+
+    public void forwardMusicButton(View view){
+        if(mSpotifyAppRemote != null){
+            mSpotifyAppRemote.getPlayerApi().skipNext();
+        }
     }
 
     @Override

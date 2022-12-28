@@ -16,29 +16,27 @@
         android:layout_gravity="start"
         app:menu="@menu/navigation_menu" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
 
-            <fragment
-                android:id="@+id/map"
-                android:name="com.google.android.gms.maps.SupportMapFragment"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:background="@drawable/box"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintHorizontal_bias="0.497"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.242"
-                    tools:context=".MapsActivity"
-                    tools:layout="@layout/activity_main"
-                    />
+                    <fragment
+                        android:id="@+id/map"
+                        android:name="com.google.android.gms.maps.SupportMapFragment"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        android:background="@drawable/box"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintHorizontal_bias="0.497"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.242"
+                            tools:context=".MapsActivity"
+                            tools:layout="@layout/activity_main"
+                            />
         <!--   This is a dummy view of the fragment cus fragment breaks the design-->
 <!--        <ImageView-->
 <!--            android:id="@+id/map"-->
@@ -50,46 +48,68 @@
 <!--            app:layout_constraintLeft_toLeftOf="parent"-->
 <!--            app:layout_constraintRight_toRightOf="parent"-->
 <!--            app:layout_constraintTop_toTopOf="parent"-->
-<!--            app:layout_constraintVertical_bias="0.242">-->
-<!--        </ImageView>-->
+<!--            app:layout_constraintVertical_bias="0.242"></ImageView>-->
 
         <Button
             android:id="@+id/spotifyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Spotify Song"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/map"
-            android:layout_marginTop="10dp"
-            android:text="Spotify Song">
-        </Button>
+            app:layout_constraintTop_toBottomOf="@+id/map"></Button>
+
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="backMusicButton"
+            android:background="@drawable/click_outline"
+            app:layout_constraintBottom_toBottomOf="@+id/spotifyButton"
+            app:layout_constraintEnd_toStartOf="@+id/spotifyButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/spotifyButton"
+            android:src="@drawable/ic_baseline_arrow_back_24"/>
+
+        <ImageButton
+            android:id="@+id/forwardsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="forwardMusicButton"
+            android:background="@drawable/click_outline"
+            app:layout_constraintBottom_toBottomOf="@+id/spotifyButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/spotifyButton"
+            app:layout_constraintTop_toTopOf="@+id/spotifyButton"
+            android:src="@drawable/ic_baseline_arrow_forward_24"/>
 
         <Button
             android:id="@+id/setRouteButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:onClick="setRouteButton"
+            android:text="@string/set_route_button_text"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/spotifyButton"
-            android:onClick="setRouteButton"
-            android:text="@string/set_route_button_text">
-        </Button>
+            app:layout_constraintTop_toBottomOf="@+id/spotifyButton"></Button>
 
         <Button
             android:id="@+id/setMusicButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:onClick="setMusicButton"
+            android:text="@string/set_music_button_text"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginTop="10dp"
-            app:layout_constraintTop_toBottomOf="@+id/setRouteButton"
-            android:onClick="setMusicButton"
-            android:text="@string/set_music_button_text">
-        </Button>
+            app:layout_constraintTop_toBottomOf="@+id/setRouteButton"></Button>
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
