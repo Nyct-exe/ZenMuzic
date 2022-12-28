@@ -27,11 +27,11 @@ public class PlaylistRecyclerView extends AppCompatActivity {
     private PlaylistAdapter playlistAdapter;
     private ArrayList<Playlist> playlists = new ArrayList<>();
 
-    // Spotify
-    private static final int REQUEST_CODE = 1337;
-    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
-    private static final String REDIRECT_URI = "http://localhost:8888/callback";
-    private SpotifyAppRemote mSpotifyAppRemote;
+//    // Spotify
+//    private static final int REQUEST_CODE = 1337;
+//    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
+//    private static final String REDIRECT_URI = "http://localhost:8888/callback";
+//    private SpotifyAppRemote mSpotifyAppRemote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +45,7 @@ public class PlaylistRecyclerView extends AppCompatActivity {
         playlistAdapter = new PlaylistAdapter(this,playlists);
         recyclerView.setAdapter(playlistAdapter);
 
-        GetSpotify();
+//        GetSpotify();
 
         PopulateData();
 
@@ -66,36 +66,36 @@ public class PlaylistRecyclerView extends AppCompatActivity {
         });
     }
 
-    /**
-     * This current implementation seems silly but I can't find anything about on how to pass SpotifyAppRemote between
-     */
-    private void GetSpotify() {
-        //     Set the connection parameters
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(CLIENT_ID)
-                        .setRedirectUri(REDIRECT_URI)
-                        .showAuthView(true)
-                        .build();
+//    /**
+//     * This current implementation seems silly but I can't find anything about on how to pass SpotifyAppRemote between
+//     */
+//    private void GetSpotify() {
+//        //     Set the connection parameters
+//        ConnectionParams connectionParams =
+//                new ConnectionParams.Builder(CLIENT_ID)
+//                        .setRedirectUri(REDIRECT_URI)
+//                        .showAuthView(true)
+//                        .build();
+//
+//        SpotifyAppRemote.connect(this, connectionParams,
+//                new Connector.ConnectionListener() {
+//
+//                    @Override
+//                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+//                        mSpotifyAppRemote = spotifyAppRemote;
+//
+//                        // Now you can start interacting with App Remote
+////                        connected();
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Throwable throwable) {
+//                        Log.e("PlaylistRecyclerView", throwable.getMessage(), throwable);
+//                        // Something went wrong when attempting to connect! Handle errors here
+//                    }
+//                });
 
-        SpotifyAppRemote.connect(this, connectionParams,
-                new Connector.ConnectionListener() {
-
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        mSpotifyAppRemote = spotifyAppRemote;
-
-                        // Now you can start interacting with App Remote
-//                        connected();
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e("PlaylistRecyclerView", throwable.getMessage(), throwable);
-                        // Something went wrong when attempting to connect! Handle errors here
-                    }
-                });
-
-    }
+//    }
 
     private void PopulateData() {
 
