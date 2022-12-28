@@ -26,6 +26,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -233,9 +234,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     // Button Logic
-    // TODO: Implement what happens when setMusic Button is pressed
     public void setMusicButton(View view){
-        Toast.makeText(this, "Set Music Needs Work", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, PlaylistRecyclerView.class);
+        startActivity(intent);
     }
     // TODO: Implement what happens when setRoute Button is pressed
     public void setRouteButton(View view){
@@ -411,7 +412,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.e("Exception: %s", e.getMessage(), e);
         }
     }
-
-
 
 }
