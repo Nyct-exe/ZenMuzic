@@ -6,6 +6,7 @@ public class Playlist implements Serializable {
 
     private boolean isChecked = false;
     private String name;
+    private String uri;
 
     public boolean isChecked() {
         return isChecked;
@@ -21,5 +22,13 @@ public class Playlist implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 }

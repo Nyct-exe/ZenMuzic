@@ -75,9 +75,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
+    private String AUTH_TOKEN;
 
     // UI
     private Button spotifyButton;
+    private Button setMusicButton;
 
 
 
@@ -108,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Button Initialization
         spotifyButton = findViewById(R.id.spotifyButton);
+        setMusicButton = findViewById(R.id.setMusicButton);
 
 
     }
@@ -135,19 +138,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onResume() {
         super.onResume();
-
-
     }
 
     private void authSpotify(){
         NavigationView navigationView = findViewById(R.id.nvView);
-        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_share);
+        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_logout);
 
         //Auth
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
-
-        builder.setScopes(new String[]{"streaming"});
+        // DECLARING SCOPES OF AUTHORIZATION
+        builder.setScopes(new String[]{"streaming","user-read-private","user-library-read","user-top-read","playlist-read-collaborative","playlist-read-private"});
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
@@ -197,7 +198,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             spotifyButton.setText(track.name + " by " + track.artist.name);
                         }
                     });
-
         }
     }
 
@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Response was successful and contains auth token
                 case TOKEN:
                     // Handle successful response
+                    AUTH_TOKEN = response.getAccessToken();
                     Toast.makeText(this, "Authorised!!", Toast.LENGTH_SHORT).show();
                     break;
 
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Button Logic
     public void setMusicButton(View view){
         Intent intent = new Intent(this, PlaylistRecyclerView.class);
+        intent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
         startActivity(intent);
     }
     // TODO: Implement what happens when setRoute Button is pressed
@@ -292,15 +294,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     break;
                 }
                 case R.id.nav_logout: {
-                    //do somthing
                     if( mSpotifyAppRemote.isConnected() == false){
                         authSpotify();
+                        setMusicButton.setEnabled(true);
+                        spotifyButton.setEnabled(true);
                         item.setTitle("Logout From Spotify");
 
                     } else {
                         AuthorizationClient.clearCookies(this);
                         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
                         item.setTitle("Login To Spotify");
+                        AUTH_TOKEN = null;
+                        setMusicButton.setEnabled(false);
+                        spotifyButton.setEnabled(false);
                         Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
 
                     }

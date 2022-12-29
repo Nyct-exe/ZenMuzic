@@ -13,6 +13,7 @@ dependencyResolutionManagement {
         flatDir {
             dirs 'libs'
         }
+        maven { url 'https://jitpack.io' }
     }
 }
 rootProject.name = "ZenMuzic"
