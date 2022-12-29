@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
+import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Spotify
     private static final int REQUEST_CODE = 1337;
-    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
+    private static final String CLIENT_ID = "b3ac30013ade499595f29bf035ab6526";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
     private String AUTH_TOKEN;
@@ -240,9 +241,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         intent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
         startActivity(intent);
     }
-    // TODO: Implement what happens when setRoute Button is pressed
+
+    // Start Route
     public void setRouteButton(View view){
-        Toast.makeText(this, "Set Route Needs Work", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, RouteRecycleView.class);
+        startActivity(intent);
     }
 
     public void backMusicButton(View view){
