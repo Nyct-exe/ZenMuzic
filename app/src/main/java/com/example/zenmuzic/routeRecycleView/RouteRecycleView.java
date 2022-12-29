@@ -51,7 +51,7 @@ public class RouteRecycleView extends AppCompatActivity {
             route.setName("Study Playlist");
             routes.add(route);
             Route route2 = new Route();
-            route.setName("Running Playlist");
+            route2.setName("Running Playlist");
             routes.add(route2);
         }
         routeAdapter.setRoutes(routes);

@@ -55,6 +55,7 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.RouteListHol
 
         void bind(final Route route) {
             routeName.setText(route.getName());
+            System.out.println(route.getName());
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
