@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Spotify
     private static final int REQUEST_CODE = 1337;
-    private static final String CLIENT_ID = "b3ac30013ade499595f29bf035ab6526";
+    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
     private String AUTH_TOKEN;
