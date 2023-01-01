@@ -76,14 +76,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
-    private String AUTH_TOKEN;
+    public String AUTH_TOKEN;
 
     // UI
     private Button spotifyButton;
-    private Button setMusicButton;
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,9 +107,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Button Initialization
         spotifyButton = findViewById(R.id.spotifyButton);
-        setMusicButton = findViewById(R.id.setMusicButton);
-
-
     }
     //Lifecycle Controls
     @Override
@@ -234,17 +227,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-    // Button Logic
-    public void setMusicButton(View view){
-        Intent intent = new Intent(this, PlaylistRecyclerView.class);
-        intent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
-        startActivity(intent);
-    }
-
     // Start Route
     public void setRouteButton(View view){
         Intent intent = new Intent(this, RouteRecycleView.class);
+        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
         startActivity(intent);
     }
 
@@ -299,7 +285,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 case R.id.nav_logout: {
                     if( mSpotifyAppRemote.isConnected() == false){
                         authSpotify();
-                        setMusicButton.setEnabled(true);
                         spotifyButton.setEnabled(true);
                         item.setTitle("Logout From Spotify");
 
@@ -308,7 +293,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
                         item.setTitle("Login To Spotify");
                         AUTH_TOKEN = null;
-                        setMusicButton.setEnabled(false);
                         spotifyButton.setEnabled(false);
                         Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
 
