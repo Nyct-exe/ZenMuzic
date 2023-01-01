@@ -1,8 +1,13 @@
 package com.example.zenmuzic.routeRecycleView;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,11 +27,18 @@ public class RouteRecycleView extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RouteAdapter routeAdapter;
     private FloatingActionButton addRouteButton;
+    private String AUTH_TOKEN;
+    private ActivityResultLauncher<Intent> routeResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_recycler_view);
+
+        Bundle extras = getIntent().getExtras();
+        if(extras != null){
+            AUTH_TOKEN = extras.getString("AUTH_TOKEN");
+        }
 
         recyclerView = findViewById(R.id.routeRecycleView);
         addRouteButton = findViewById(R.id.routeAddButton);
@@ -34,7 +46,41 @@ public class RouteRecycleView extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         routeAdapter = new RouteAdapter(this, routes);
+        routeAdapter.setOnItemClickListener(new RouteAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                Route route = routes.get(position);
+                openRouteAdd(route, position);
+            }
+        });
         recyclerView.setAdapter(routeAdapter);
+
+        addRouteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Route route = new Route();
+                routes.add(route);
+                openRouteAdd(route, routes.size()-1);
+            }
+        });
+        routeResultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        int position = data.getIntExtra("POSITION", -1);
+                        if(data.getBooleanExtra("DELETE", false)) {
+                            routes.remove(position);
+                        }
+                        else {
+                            Route dataRoute = (Route) data.getSerializableExtra("ROUTE_OBJECT");
+                            routes.set(position, dataRoute);
+                        }
+                        routeAdapter.notifyDataSetChanged();
+                        saveData();
+
+                    }
+                });
 
         loadData();
     }
@@ -47,13 +93,24 @@ public class RouteRecycleView extends AppCompatActivity {
         routes = gson.fromJson(json, type);
         if (routes == null) {
             routes = new ArrayList<>();
-            Route route = new Route();
-            route.setName("Study Playlist");
-            routes.add(route);
-            Route route2 = new Route();
-            route2.setName("Running Playlist");
-            routes.add(route2);
         }
         routeAdapter.setRoutes(routes);
+    }
+
+    private void saveData() {
+        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(routes);
+        editor.putString("routes list", json);
+        editor.apply();
+    }
+
+    public void openRouteAdd(Route route, int position) {
+        Intent intent = new Intent(RouteRecycleView.this, RouteAdd.class);
+        intent.putExtra("ROUTE_OBJECT", route);
+        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
+        intent.putExtra("POSITION", position);
+        routeResultLauncher.launch(intent);
     }
 }
