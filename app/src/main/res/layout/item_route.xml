@@ -9,5 +9,5 @@
         android:id="@+id/route_name_textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="48sp" />
+        android:textSize="18sp" />
 </LinearLayout>
