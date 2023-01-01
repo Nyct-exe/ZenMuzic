@@ -16,26 +16,26 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.Light"
         tools:targetApi="32" >
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}"/>
         <activity
             android:name=".playlistRecyclerView.PlaylistRecyclerView"
             android:exported="false"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
+            android:parentActivityName=".routeRecycleView.RouteAdd">
         </activity>
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
 
         <activity
             android:name=".routeRecycleView.RouteRecycleView"
             android:exported="false"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
+            android:parentActivityName=".MainActivity"
+            android:launchMode="singleTop">
+        </activity>
+
+        <activity
+            android:name=".routeRecycleView.RouteAdd"
+            android:exported="false"
+            android:launchMode="singleTop">
         </activity>
 
         <activity
@@ -43,13 +43,8 @@
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="MainActivity" />
         </activity>
     </application>
 
