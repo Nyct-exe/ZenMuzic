@@ -8,5 +8,10 @@
     <string name="dialog_spotify_text">The application Requires Spotify To Be Present on The Device.</string>
     <string name="dialog_spotify_install">Install Spotify</string>
     <string name="cancel">Cancel</string>
+
     <string name="add_route_button_text">Add Route</string>
+    <string name="route_name_hint">Route Name Here…</string>
+    <string name="save_route">Save</string>
+    <string name="delete_route">Delete</string>
+    <string name="playlist_name_input">Please Select Playlist</string>
 </resources>
