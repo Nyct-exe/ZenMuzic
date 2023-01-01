@@ -44,24 +44,39 @@ public class RouteAdapter extends RecyclerView.Adapter<RouteAdapter.RouteListHol
         return routes.size();
     }
 
-    class RouteListHolder extends RecyclerView.ViewHolder{
+    public interface OnItemClickListener {
+        void onItemClick(View itemView, int position);
+    }
+
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    class RouteListHolder extends RecyclerView.ViewHolder {
         private TextView routeName;
 
         public RouteListHolder(@NonNull View itemView) {
             super(itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onItemClick(itemView, position);
+                        }
+                    }
+                }
+            });
             routeName = itemView.findViewById(R.id.route_name_textView);
+
 
         }
 
         void bind(final Route route) {
             routeName.setText(route.getName());
-            System.out.println(route.getName());
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                }
-            });
         }
 
 
