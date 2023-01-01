@@ -36,7 +36,9 @@
                         app:layout_constraintVertical_bias="0.242"
                             tools:context=".MapsActivity"
                             tools:layout="@layout/activity_main"
+
                             />
+
         <!--   This is a dummy view of the fragment cus fragment breaks the design-->
 <!--        <ImageView-->
 <!--            android:id="@+id/map"-->
@@ -96,18 +98,6 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spotifyButton"></Button>
-
-        <Button
-            android:id="@+id/setMusicButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:onClick="setMusicButton"
-            android:text="@string/set_music_button_text"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/setRouteButton"></Button>
 
 
 
