@@ -1,16 +1,19 @@
 package com.example.zenmuzic.playlistRecyclerView;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.routeRecycleView.Route;
+
 import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -19,8 +22,6 @@ import java.util.concurrent.CompletionException;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Paging;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
-import se.michaelthelin.spotify.model_objects.specification.SavedAlbum;
-import se.michaelthelin.spotify.requests.data.library.GetCurrentUsersSavedAlbumsRequest;
 import se.michaelthelin.spotify.requests.data.playlists.GetListOfCurrentUsersPlaylistsRequest;
 
 
@@ -34,6 +35,8 @@ public class PlaylistRecyclerView extends AppCompatActivity {
 
     // Spotify
     private String AUTH_TOKEN;
+    private Route route;
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,19 +55,22 @@ public class PlaylistRecyclerView extends AppCompatActivity {
         if(extras != null){
             AUTH_TOKEN = extras.getString("AUTH_TOKEN");
         }
+        route = (Route) getIntent().getSerializableExtra("ROUTE_OBJECT");
 
         GetSpotifyPlaylists_Async();
-
+        intent = new Intent();
+        intent.putExtra("ROUTE_OBJECT", route);
+        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
         /**
          * Currently displays just the name of the selected playlist
          */
-        //TODO: Implement actual setting of the playlist to the route once routes are created
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(playlistAdapter.getSelectedPlaylist() != null){
-
-                    Toast.makeText(PlaylistRecyclerView.this, playlistAdapter.getSelectedPlaylist().getName(), Toast.LENGTH_SHORT).show();
+                    route.setPlaylist(playlistAdapter.getSelectedPlaylist());
+                    setResult(RESULT_OK, intent);
+                    finish();
                 } else {
                     Toast.makeText(PlaylistRecyclerView.this, "Playlist Not Selected", Toast.LENGTH_SHORT).show();
                 }
@@ -111,7 +117,6 @@ public class PlaylistRecyclerView extends AppCompatActivity {
         } catch (CancellationException e) {
             System.out.println("Async operation cancelled.");
         }
-
     }
 
 }
