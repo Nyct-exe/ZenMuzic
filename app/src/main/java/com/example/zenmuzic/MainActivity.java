@@ -14,6 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -192,6 +193,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             spotifyButton.setText(track.name + " by " + track.artist.name);
                         }
                     });
+            if(!isForegroundServiceRunning()){
+                // Starts a Service in the Foreground
+                Intent serviceIntent = new Intent(this,ForegroundService.class);
+                startForegroundService(serviceIntent);
+            }
         }
     }
 
@@ -404,6 +410,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage(), e);
         }
+    }
+
+    public boolean isForegroundServiceRunning(){
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+        for(ActivityManager.RunningServiceInfo serviceInfo: activityManager.getRunningServices(Integer.MAX_VALUE)){
+            if(ForegroundService.class.getName().equals(serviceInfo.service.getClassName()))
+                return true;
+        }
+        return false;
     }
 
 }
