@@ -14,9 +14,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zenmuzic.R;
-import com.example.zenmuzic.ZenMusicApplication;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -28,17 +29,12 @@ public class RouteRecycleView extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RouteAdapter routeAdapter;
     private FloatingActionButton addRouteButton;
-    private String AUTH_TOKEN;
     private ActivityResultLauncher<Intent> routeResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_recycler_view);
-
-        AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
-
-
         recyclerView = findViewById(R.id.routeRecycleView);
         addRouteButton = findViewById(R.id.routeAddButton);
 
@@ -72,7 +68,7 @@ public class RouteRecycleView extends AppCompatActivity {
                             routes.remove(position);
                         }
                         else {
-                            Route dataRoute = (Route) data.getSerializableExtra("ROUTE_OBJECT");
+                            Route dataRoute = data.getParcelableExtra("ROUTE_OBJECT");
                             routes.set(position, dataRoute);
                         }
                         routeAdapter.notifyDataSetChanged();
@@ -86,7 +82,7 @@ public class RouteRecycleView extends AppCompatActivity {
 
     public void loadData() {
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
         String json = sharedPreferences.getString("routes list", null);
         Type type = new TypeToken<ArrayList<Route>>() {}.getType();
         routes = gson.fromJson(json, type);
@@ -99,7 +95,7 @@ public class RouteRecycleView extends AppCompatActivity {
     private void saveData() {
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
         String json = gson.toJson(routes);
         editor.putString("routes list", json);
         editor.apply();
