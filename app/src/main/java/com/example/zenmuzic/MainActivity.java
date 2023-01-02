@@ -116,9 +116,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         /**
          *  Currently every time the app is reopened it plays the indie rock music playlist. smth to consider.
          */
-        if (SpotifyAppRemote.isSpotifyInstalled(this)){
+        if (SpotifyAppRemote.isSpotifyInstalled(this) && AUTH_TOKEN == null){
             authSpotify();
-        }else{ // if the user does not have Spotify installed it opens spotify on google play
+        }else if(!SpotifyAppRemote.isSpotifyInstalled(this)){ // if the user does not have Spotify installed it opens spotify on google play
             // Dialog Fragment initialisation
             new SpotifyMissingDialogFragment().show(getSupportFragmentManager(),"DialogBox");
         }
@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // Response was successful and contains auth token
                 case TOKEN:
                     // Handle successful response
+                    ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(response.getAccessToken());
                     AUTH_TOKEN = response.getAccessToken();
                     Toast.makeText(this, "Authorised!!", Toast.LENGTH_SHORT).show();
                     break;
@@ -236,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Start Route
     public void setRouteButton(View view){
         Intent intent = new Intent(this, RouteRecycleView.class);
-        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
         startActivity(intent);
     }
 
@@ -299,6 +299,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
                         item.setTitle("Login To Spotify");
                         AUTH_TOKEN = null;
+                        ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(null);
                         spotifyButton.setEnabled(false);
                         Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
 

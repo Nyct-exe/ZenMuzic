@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.ZenMusicApplication;
 import com.example.zenmuzic.routeRecycleView.Route;
 
 import java.util.ArrayList;
@@ -51,10 +52,7 @@ public class PlaylistRecyclerView extends AppCompatActivity {
         recyclerView.setAdapter(playlistAdapter);
 
         // Getting Auth Token
-        Bundle extras = getIntent().getExtras();
-        if(extras != null){
-            AUTH_TOKEN = extras.getString("AUTH_TOKEN");
-        }
+        AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
         route = (Route) getIntent().getSerializableExtra("ROUTE_OBJECT");
 
         GetSpotifyPlaylists_Async();

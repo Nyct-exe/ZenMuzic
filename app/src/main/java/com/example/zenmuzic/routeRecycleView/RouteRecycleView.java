@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.ZenMusicApplication;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -35,10 +36,8 @@ public class RouteRecycleView extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_route_recycler_view);
 
-        Bundle extras = getIntent().getExtras();
-        if(extras != null){
-            AUTH_TOKEN = extras.getString("AUTH_TOKEN");
-        }
+        AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
+
 
         recyclerView = findViewById(R.id.routeRecycleView);
         addRouteButton = findViewById(R.id.routeAddButton);
@@ -85,7 +84,7 @@ public class RouteRecycleView extends AppCompatActivity {
         loadData();
     }
 
-    private void loadData() {
+    public void loadData() {
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
         Gson gson = new Gson();
         String json = sharedPreferences.getString("routes list", null);
@@ -109,7 +108,6 @@ public class RouteRecycleView extends AppCompatActivity {
     public void openRouteAdd(Route route, int position) {
         Intent intent = new Intent(RouteRecycleView.this, RouteAdd.class);
         intent.putExtra("ROUTE_OBJECT", route);
-        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
         intent.putExtra("POSITION", position);
         routeResultLauncher.launch(intent);
     }

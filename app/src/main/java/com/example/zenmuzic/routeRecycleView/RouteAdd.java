@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zenmuzic.BuildConfig;
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.ZenMusicApplication;
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
 import com.google.android.gms.common.api.Status;
 import com.google.android.libraries.places.api.Places;
@@ -38,10 +39,9 @@ public class RouteAdd extends AppCompatActivity {
 
 
     private void handleIntent(Intent intent) {
-        Bundle extras = intent.getExtras();
-        if(extras != null){
-            AUTH_TOKEN = extras.getString("AUTH_TOKEN");
-        }
+
+        AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
+
         Route extraRoute = (Route) intent.getSerializableExtra("ROUTE_OBJECT");
         if (extraRoute != null) {
             route = extraRoute;
