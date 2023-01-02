@@ -53,12 +53,11 @@ public class PlaylistRecyclerView extends AppCompatActivity {
 
         // Getting Auth Token
         AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
-        route = (Route) getIntent().getSerializableExtra("ROUTE_OBJECT");
+        route = getIntent().getParcelableExtra("ROUTE_OBJECT");
 
         GetSpotifyPlaylists_Async();
         intent = new Intent();
         intent.putExtra("ROUTE_OBJECT", route);
-        intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
         /**
          * Currently displays just the name of the selected playlist
          */
