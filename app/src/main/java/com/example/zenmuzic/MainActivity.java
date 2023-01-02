@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
         // DECLARING SCOPES OF AUTHORIZATION
-        builder.setScopes(new String[]{"streaming","user-read-private","user-library-read","user-top-read","playlist-read-collaborative","playlist-read-private"});
+        builder.setScopes(new String[]{"app-remote-control","user-read-playback-state","user-read-playback-position","user-read-currently-playing","streaming","user-read-private","user-library-read","user-top-read","playlist-read-collaborative","playlist-read-private"});
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
@@ -195,9 +195,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             spotifyButton.setText(track.name + " by " + track.artist.name);
                         }
                     });
-            if(!isForegroundServiceRunning()){
+            if(!isForegroundServiceRunning() && AUTH_TOKEN != null){
                 // Starts a Service in the Foreground
                 Intent serviceIntent = new Intent(this,ForegroundService.class);
+                serviceIntent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
                 startForegroundService(serviceIntent);
             }
         }

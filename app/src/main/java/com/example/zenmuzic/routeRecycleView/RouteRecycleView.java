@@ -80,7 +80,7 @@ public class RouteRecycleView extends AppCompatActivity {
         loadData();
     }
 
-    public void loadData() {
+    private void loadData() {
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
         Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
         String json = sharedPreferences.getString("routes list", null);
