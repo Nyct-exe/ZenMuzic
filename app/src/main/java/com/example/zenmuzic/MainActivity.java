@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // UI
     private Button spotifyButton;
+    private Button setRouteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Button Initialization
         spotifyButton = findViewById(R.id.spotifyButton);
+        setRouteButton = findViewById(R.id.setRouteButton);
     }
     //Lifecycle Controls
     @Override
@@ -170,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onFailure(Throwable throwable) {
                         Log.e("MainActivity", throwable.getMessage(), throwable);
                         logoutItem.setTitle("Login To Spotify");
-
+                        setRouteButton.setEnabled(false);
                         // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
@@ -292,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if( mSpotifyAppRemote.isConnected() == false){
                         authSpotify();
                         spotifyButton.setEnabled(true);
+                        setRouteButton.setEnabled(true);
                         item.setTitle("Logout From Spotify");
 
                     } else {
@@ -301,6 +304,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         AUTH_TOKEN = null;
                         ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(null);
                         spotifyButton.setEnabled(false);
+                        setRouteButton.setEnabled(false);
                         Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
 
                     }
