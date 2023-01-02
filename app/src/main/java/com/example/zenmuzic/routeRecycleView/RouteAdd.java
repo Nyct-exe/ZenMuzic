@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zenmuzic.BuildConfig;
 import com.example.zenmuzic.R;
-import com.example.zenmuzic.ZenMusicApplication;
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
 import com.google.android.gms.common.api.Status;
 import com.google.android.libraries.places.api.Places;
@@ -33,16 +32,11 @@ public class RouteAdd extends AppCompatActivity {
     private TextView playlistText;
     private AutocompleteSupportFragment startRoute;
     private AutocompleteSupportFragment endRoute;
-    private String AUTH_TOKEN;
     private ActivityResultLauncher<Intent> playlistResultLauncher;
     private int position;
 
-
     private void handleIntent(Intent intent) {
-
-        AUTH_TOKEN = ((ZenMusicApplication) this.getApplication()).getAUTH_TOKEN();
-
-        Route extraRoute = (Route) intent.getSerializableExtra("ROUTE_OBJECT");
+        Route extraRoute = intent.getParcelableExtra("ROUTE_OBJECT");
         if (extraRoute != null) {
             route = extraRoute;
             routeInput.setText(route.getName());
@@ -53,7 +47,7 @@ public class RouteAdd extends AppCompatActivity {
                 startRoute.setText(route.getStartingPoint().getName());
             }
             if(route.getEndPoint() != null) {
-                startRoute.setText(route.getEndPoint().getName());
+                endRoute.setText(route.getEndPoint().getName());
             }
 
         }
@@ -68,11 +62,9 @@ public class RouteAdd extends AppCompatActivity {
         setContentView(R.layout.activity_add_route);
         routeInput = findViewById(R.id.routeNameInput);
         playlistText = findViewById(R.id.playlistText);
-
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY, Locale.US);
         }
-
         startRoute = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.start_route_fragment);
         startRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
@@ -82,10 +74,9 @@ public class RouteAdd extends AppCompatActivity {
         endRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
 
         startRoute.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            // TODO: Place is Parcelable rather than Serializable. Figure out workaround or implement Parcelable in Route
             @Override
             public void onPlaceSelected(@NonNull Place place) {
-//                route.setStartingPoint(place);
+                route.setStartingPoint(place);
             }
 
             @Override
@@ -94,10 +85,9 @@ public class RouteAdd extends AppCompatActivity {
         });
 
         endRoute.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            // TODO: Place is Parcelable rather than Serializable. Figure out workaround or implement Parcelable in Route
             @Override
             public void onPlaceSelected(@NonNull Place place) {
-//                route.setEndPoint(place);
+                route.setEndPoint(place);
             }
 
             @Override
@@ -125,14 +115,9 @@ public class RouteAdd extends AppCompatActivity {
                 route.setName(routeInput.getText().toString());
                 Intent intent = new Intent(RouteAdd.this, PlaylistRecyclerView.class);
                 intent.putExtra("ROUTE_OBJECT", route);
-                intent.putExtra("AUTH_TOKEN", AUTH_TOKEN);
                 openPlaylistForResult(intent);
             }
         });
-
-
-
-
 
         findViewById(R.id.saveRoute).setOnClickListener(new View.OnClickListener() {
             @Override
