@@ -24,9 +24,6 @@ import org.apache.hc.core5.http.ParseException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
@@ -110,9 +107,11 @@ public class ForegroundService extends Service {
                         .build();
         try {
             final CurrentlyPlayingContext currentlyPlayingContext = getInformationAboutUsersCurrentPlaybackRequest.execute();
-            Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
-            if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
-                return true;
+            if(currentlyPlayingContext != null) {
+                Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
+                if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
+                    return true;
+            }
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());
         }
