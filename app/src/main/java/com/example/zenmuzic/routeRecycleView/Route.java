@@ -4,7 +4,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.example.zenmuzic.playlistRecyclerView.Playlist;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.Place;
+
+import java.util.ArrayList;
 
 public class Route implements Parcelable {
     private String name = "";
@@ -15,13 +18,19 @@ public class Route implements Parcelable {
 
     private Place endPoint;
 
-    protected Route() {}
+    private ArrayList<LatLng> listOfPoints;
+
+    protected Route() {
+        listOfPoints = new ArrayList<LatLng>();
+    }
 
     protected Route(Parcel in) {
         name = in.readString();
         playlist = in.readParcelable(Playlist.class.getClassLoader());
         startingPoint = in.readParcelable(Place.class.getClassLoader());
         endPoint = in.readParcelable(Place.class.getClassLoader());
+        listOfPoints = new ArrayList<LatLng>();
+        in.readParcelableList(listOfPoints, LatLng.class.getClassLoader());
     }
 
     public static final Creator<Route> CREATOR = new Creator<Route>() {
@@ -68,6 +77,9 @@ public class Route implements Parcelable {
         this.endPoint = endPoint;
     }
 
+    public ArrayList<LatLng> getListOfPoints() {return listOfPoints;}
+
+    public void setListOfPoints(ArrayList<LatLng> listOfPoints) {this.listOfPoints = listOfPoints;}
 
     @Override
     public int describeContents() {
@@ -80,5 +92,6 @@ public class Route implements Parcelable {
         parcel.writeParcelable(playlist, i);
         parcel.writeParcelable(startingPoint, i);
         parcel.writeParcelable(endPoint, i);
+        parcel.writeParcelableList(listOfPoints, i);
     }
 }

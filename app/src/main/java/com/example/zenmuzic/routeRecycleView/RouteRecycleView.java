@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.mapAPI.GetDirections;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
@@ -21,6 +23,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class RouteRecycleView extends AppCompatActivity {
@@ -30,6 +33,16 @@ public class RouteRecycleView extends AppCompatActivity {
     private RouteAdapter routeAdapter;
     private FloatingActionButton addRouteButton;
     private ActivityResultLauncher<Intent> routeResultLauncher;
+
+
+    private void getListOfLocationsForRoute(Route route) {
+        if(route.getStartingPoint() != null && route.getEndPoint() != null) {
+            LatLng origin = route.getStartingPoint().getLatLng();
+            LatLng destination = route.getEndPoint().getLatLng();
+            URL url = GetDirections.createURL(origin, destination);
+            new GetDirections(route, this).execute(url);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +83,10 @@ public class RouteRecycleView extends AppCompatActivity {
                         else {
                             Route dataRoute = data.getParcelableExtra("ROUTE_OBJECT");
                             routes.set(position, dataRoute);
+                            getListOfLocationsForRoute(routes.get(position));
                         }
                         routeAdapter.notifyDataSetChanged();
                         saveData();
-
                     }
                 });
 
@@ -92,7 +105,7 @@ public class RouteRecycleView extends AppCompatActivity {
         routeAdapter.setRoutes(routes);
     }
 
-    private void saveData() {
+    public void saveData() {
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
