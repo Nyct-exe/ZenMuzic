@@ -67,11 +67,11 @@ public class RouteAdd extends AppCompatActivity {
         }
         startRoute = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.start_route_fragment);
-        startRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        startRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
 
         endRoute = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.end_route_fragment);
-        endRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        endRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
 
         startRoute.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
