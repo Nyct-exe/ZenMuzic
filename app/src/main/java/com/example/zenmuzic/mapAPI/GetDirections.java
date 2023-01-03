@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.zenmuzic.BuildConfig;
-import com.google.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,10 +14,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-class GetDirections extends AsyncTask<URL, String, String> {
+public class GetDirections extends AsyncTask<URL, String, String> {
     public static URL createURL(LatLng origin, LatLng destination) {
-        String stringOrigin = "origin=" + origin.lat + "," + origin.lng;
-        String strDestination = "destination=" + destination.lat + "," + destination.lng;
+        String stringOrigin = "origin=" + origin.latitude + "," + origin.longitude;
+        String strDestination = "destination=" + destination.latitude + "," + destination.longitude;
         String key = "key=" + BuildConfig.MAPS_API_KEY;
         String parameters = stringOrigin + "&amp;" + strDestination + "&amp;" + key;
         String output = "json";
