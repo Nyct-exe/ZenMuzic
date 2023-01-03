@@ -4,7 +4,13 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.zenmuzic.BuildConfig;
+import com.example.zenmuzic.routeRecycleView.Route;
+import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,13 +19,22 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class GetDirections extends AsyncTask<URL, String, String> {
+    private RouteRecycleView routeRecycleView;
+    private Route route;
+
+    public GetDirections(Route route, RouteRecycleView routeRecycleView) {
+        this.route = route;
+        this.routeRecycleView = routeRecycleView;
+    }
+
     public static URL createURL(LatLng origin, LatLng destination) {
         String stringOrigin = "origin=" + origin.latitude + "," + origin.longitude;
         String strDestination = "destination=" + destination.latitude + "," + destination.longitude;
         String key = "key=" + BuildConfig.MAPS_API_KEY;
-        String parameters = stringOrigin + "&amp;" + strDestination + "&amp;" + key;
+        String parameters = stringOrigin + "&" + strDestination + "&" + key;
         String output = "json";
         URL url = null;
         try {
@@ -69,9 +84,35 @@ public class GetDirections extends AsyncTask<URL, String, String> {
         return data;
     }
 
+    private LatLng createLatLng(JSONObject step) throws JSONException {
+        double latitude = step.getDouble("lat");
+        double longitude = step.getDouble("lng");
+        return new LatLng(latitude, longitude);
+    }
+
+    private ArrayList<LatLng> parseRouteJSON(String result) {
+        ArrayList<LatLng> listOfLocations = new ArrayList<>();
+        try {
+            JSONObject root = new JSONObject(result);
+            JSONObject routeContent = root.getJSONArray("routes").getJSONObject(0);
+            JSONArray steps = routeContent.getJSONArray("legs").getJSONObject(0).getJSONArray("steps");
+            listOfLocations.add(createLatLng(steps.getJSONObject(0).getJSONObject("start_location")));
+            for (int i = 0; i < steps.length(); i++) {
+                JSONObject step = steps.getJSONObject(i);
+                listOfLocations.add(createLatLng(step.getJSONObject("end_location")));
+            }
+        }
+        catch(JSONException e) {
+            System.out.println(e.getMessage());
+        }
+        return listOfLocations;
+    }
+
     @Override
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
-        System.out.println(result);
+        ArrayList<LatLng> listOfLocations = parseRouteJSON(result);
+        route.setListOfPoints(listOfLocations);
+        routeRecycleView.saveData();
     }
 }
