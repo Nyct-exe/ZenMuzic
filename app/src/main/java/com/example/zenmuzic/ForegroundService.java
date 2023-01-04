@@ -234,7 +234,6 @@ public class ForegroundService extends Service {
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
-
     // TODO: Change or Remove what happens on new Location
 
     private void onNewLocation(Location location) {
