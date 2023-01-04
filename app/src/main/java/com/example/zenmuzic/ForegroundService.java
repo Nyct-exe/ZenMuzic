@@ -34,6 +34,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -41,7 +42,7 @@ import com.google.android.libraries.places.api.model.Place;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.google.maps.model.LatLng;
+import com.google.maps.android.PolyUtil;
 
 import org.apache.hc.core5.http.ParseException;
 
@@ -72,6 +73,8 @@ public class ForegroundService extends Service {
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private double currentUserSpeed;
+
+    private double routeTolerance = 50;
 
 
     @Override
@@ -109,21 +112,15 @@ public class ForegroundService extends Service {
                     public void run() {
                         while(true){
                             // TODO: WRITE LOGIC WHAT HAPPENS IN THE FOREGROUND
-//                            Log.d("Foreground","Foreground Service is Running");
                             loadData();
-//                            if(isSongFinishing(5000)){
-//                                Log.d("Foreground","Song is Finishing");
-//                                if(getCurrentSpeed() > 0)
-//                                    Log.d("Foregorund","Speed:" + getCurrentSpeed());
-//                                for(Route r: routes){
-//                                    getPolyPath(r);
-//                                    if(PolyUtil.isLocationOnPath(getCurrentLocation())){
-//
-//                                    }
-//                                    r.getStartingPoint().get
-//                                    PolyUtil.isLocationOnPath()
-//                                }
-//                            }
+                            if(isSongFinishing(500000)){
+                                for (Route route: routes){
+                                    LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                                    if(PolyUtil.isLocationOnPath(userLocation, route.getListOfPoints(), false, routeTolerance)) {
+                                        System.out.println("ON PATH");
+                                    }
+                                }
+                            }
                             getCurrentSpeed();
                             Log.d("Foreground","Speed: "+currentUserSpeed);
                         }
@@ -168,7 +165,6 @@ public class ForegroundService extends Service {
         try {
             final CurrentlyPlayingContext currentlyPlayingContext = getInformationAboutUsersCurrentPlaybackRequest.execute();
             if(currentlyPlayingContext != null) {
-                Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
                 if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
                     return true;
             }
