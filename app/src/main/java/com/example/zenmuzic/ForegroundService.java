@@ -16,6 +16,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -42,6 +43,9 @@ import com.google.android.libraries.places.api.model.Place;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.google.maps.android.PolyUtil;
 
 import org.apache.hc.core5.http.ParseException;
@@ -54,8 +58,14 @@ import java.util.concurrent.Executor;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlayingContext;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.Playlist;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
+import se.michaelthelin.spotify.requests.data.player.AddItemToUsersPlaybackQueueRequest;
 import se.michaelthelin.spotify.requests.data.player.GetInformationAboutUsersCurrentPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.player.SkipUsersPlaybackToNextTrackRequest;
+import se.michaelthelin.spotify.requests.data.player.StartResumeUsersPlaybackRequest;
+import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 
 public class ForegroundService extends Service {
 
@@ -63,7 +73,13 @@ public class ForegroundService extends Service {
 
     // Spotify
     private String AUTH_TOKEN;
+    // For handling web-api
     private SpotifyApi spotifyApi;
+    // For handling IRC spotify communication
+    private SpotifyAppRemote mSpotifyAppRemote;
+    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
+    private static final String REDIRECT_URI = "http://localhost:8888/callback";
+
 
     // The entry point to the Fused Location Provider.
     // GPS
@@ -105,28 +121,7 @@ public class ForegroundService extends Service {
                 .setAccessToken(AUTH_TOKEN)
                 .build();
 
-        new Thread(
-                new Runnable() {
-                    @SuppressLint("MissingPermission")
-                    @Override
-                    public void run() {
-                        while(true){
-                            // TODO: WRITE LOGIC WHAT HAPPENS IN THE FOREGROUND
-                            loadData();
-                            if(isSongFinishing(500000)){
-                                for (Route route: routes){
-                                    LatLng userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                                    if(PolyUtil.isLocationOnPath(userLocation, route.getListOfPoints(), false, routeTolerance)) {
-                                        System.out.println("ON PATH");
-                                    }
-                                }
-                            }
-                            getCurrentSpeed();
-                            Log.d("Foreground","Speed: "+currentUserSpeed);
-                        }
-                    }
-                }
-        ).start();
+        linkSpotifyAndStartAThread();
 
         final String CHANNEL_ID = "Foreground Service";
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID,CHANNEL_ID, NotificationManager.IMPORTANCE_LOW);
@@ -144,6 +139,32 @@ public class ForegroundService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void serviceThread() {
+        new Thread(
+                new Runnable() {
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void run() {
+                        while(true){
+                            // TODO: WRITE LOGIC WHAT HAPPENS IN THE FOREGROUND
+//                            Log.d("Foreground","Foreground Service is Running");
+                            loadData();
+                            if(isSongFinishing(5000)){
+                                Log.d("Foreground","Song is Finishing");
+                                for(Route r: routes){
+                                    if(r.getPlaylist() != null)
+                                        mSpotifyAppRemote.getPlayerApi().play(r.getPlaylist().getUri());
+                                }
+                            }
+                            getCurrentSpeed();
+                            Log.d("Foreground","Speed: "+currentUserSpeed);
+                        }
+                    }
+                }
+        ).start();
+
     }
 
     private void loadData(){
@@ -165,6 +186,7 @@ public class ForegroundService extends Service {
         try {
             final CurrentlyPlayingContext currentlyPlayingContext = getInformationAboutUsersCurrentPlaybackRequest.execute();
             if(currentlyPlayingContext != null) {
+                Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
                 if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
                     return true;
             }
@@ -257,9 +279,35 @@ public class ForegroundService extends Service {
         }
     }
 
+    public void linkSpotifyAndStartAThread(){
+        // Connect Spotify Remote
+        // Set the connection parameters
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(false)
+                        .build();
 
 
+        SpotifyAppRemote.connect(this, connectionParams,
+                new Connector.ConnectionListener() {
 
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        mSpotifyAppRemote = spotifyAppRemote;
+                        Log.d("ForegroundService", "Connected! Yay!");
+                        serviceThread();
+
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e("ForegroundService", throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
+    }
 
 
 
