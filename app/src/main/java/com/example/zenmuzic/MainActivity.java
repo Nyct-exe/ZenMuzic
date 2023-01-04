@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStop() {
         super.onStop();
+        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }
 
     @Override
@@ -195,12 +196,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             spotifyButton.setText(track.name + " by " + track.artist.name);
                         }
                     });
-            if(!isForegroundServiceRunning() && AUTH_TOKEN != null){
-                // Starts a Service in the Foreground
-                Intent serviceIntent = new Intent(this,ForegroundService.class);
-                serviceIntent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
-                startForegroundService(serviceIntent);
-            }
+        }
+        /**
+         * Starts a Foreground Service
+         */
+        if(!isForegroundServiceRunning() && AUTH_TOKEN != null && SpotifyAppRemote.isSpotifyInstalled(this) ){
+            // Starts a Service in the Foreground
+            Intent serviceIntent = new Intent(this,ForegroundService.class);
+            serviceIntent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
+            serviceIntent.putExtra("locationGranted",locationPermissionGranted);
+            startForegroundService(serviceIntent);
         }
     }
 

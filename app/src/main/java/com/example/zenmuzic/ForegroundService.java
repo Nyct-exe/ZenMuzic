@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
@@ -156,6 +157,12 @@ public class ForegroundService extends Service {
                                 for(Route r: routes){
                                     if(r.getPlaylist() != null)
                                         mSpotifyAppRemote.getPlayerApi().play(r.getPlaylist().getUri());
+                                }
+                                // The service is too fast and sometimes manages to change playlist twice.
+                                try {
+                                    TimeUnit.SECONDS.sleep(1);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
                                 }
                             }
                             getCurrentSpeed();
