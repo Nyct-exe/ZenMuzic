@@ -167,9 +167,11 @@ public class ForegroundService extends Service {
                         .build();
         try {
             final CurrentlyPlayingContext currentlyPlayingContext = getInformationAboutUsersCurrentPlaybackRequest.execute();
-            Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
-            if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
-                return true;
+            if(currentlyPlayingContext != null) {
+                Log.d("ForegroundService","Progress: " + currentlyPlayingContext.getProgress_ms());
+                if(currentlyPlayingContext.getItem().getDurationMs() - currentlyPlayingContext.getProgress_ms() < milesecondsBeforeEnd)
+                    return true;
+            }
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());
         }
