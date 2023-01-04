@@ -186,6 +186,10 @@ public class ForegroundService extends Service {
 
     }
 
+    /*
+    * Note to developers, this method crashes if you're listening to a PodCast.
+     */
+
     private boolean isSongFinishing(int milesecondsBeforeEnd){
         GetInformationAboutUsersCurrentPlaybackRequest getInformationAboutUsersCurrentPlaybackRequest =
                 spotifyApi.getInformationAboutUsersCurrentPlayback()

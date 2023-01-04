@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResult;
@@ -30,10 +33,15 @@ public class RouteAdd extends AppCompatActivity {
     private Route route;
     private TextInputEditText routeInput;
     private TextView playlistText;
+    private Spinner spinnerTransport;
     private AutocompleteSupportFragment startRoute;
     private AutocompleteSupportFragment endRoute;
     private ActivityResultLauncher<Intent> playlistResultLauncher;
     private int position;
+    private String spinnerValue;
+    // SPEEDS FOR TRANSPORT
+    private static final double WALKING = 3;
+    private static final double CAR = 9;
 
     private void handleIntent(Intent intent) {
         Route extraRoute = intent.getParcelableExtra("ROUTE_OBJECT");
@@ -62,16 +70,19 @@ public class RouteAdd extends AppCompatActivity {
         setContentView(R.layout.activity_add_route);
         routeInput = findViewById(R.id.routeNameInput);
         playlistText = findViewById(R.id.playlistText);
+        spinnerTransport = findViewById(R.id.spinner_transport);
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY, Locale.US);
         }
         startRoute = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.start_route_fragment);
         startRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
+        startRoute.setHint("Starting Location");
 
         endRoute = (AutocompleteSupportFragment)
                 getSupportFragmentManager().findFragmentById(R.id.end_route_fragment);
         endRoute.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG));
+        endRoute.setHint("Destination");
 
         startRoute.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
@@ -113,6 +124,19 @@ public class RouteAdd extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 route.setName(routeInput.getText().toString());
+                switch (spinnerValue){
+                    case "Walking":
+                        route.setSpeed(WALKING);
+                        break;
+                    case "Car":
+                        route.setSpeed(CAR);
+                        break;
+                    default:
+                        route.setSpeed(WALKING);
+                        break;
+                }
+
+
                 Intent intent = new Intent(RouteAdd.this, PlaylistRecyclerView.class);
                 intent.putExtra("ROUTE_OBJECT", route);
                 openPlaylistForResult(intent);
@@ -132,6 +156,25 @@ public class RouteAdd extends AppCompatActivity {
                 finishRoute(true);
             }
         });
+
+        // Spinner
+        ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(this,R.array.Trasnport, android.R.layout.simple_spinner_item);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+        spinnerTransport.setAdapter(arrayAdapter);
+        spinnerTransport.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                spinnerValue = adapterView.getSelectedItem().toString();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                    // Do Nothing
+            }
+        });
+
+
 
 
     }

@@ -20,6 +20,8 @@ public class Route implements Parcelable {
 
     private ArrayList<LatLng> listOfPoints;
 
+    private double speed;
+
     protected Route() {
         listOfPoints = new ArrayList<LatLng>();
     }
@@ -31,6 +33,7 @@ public class Route implements Parcelable {
         endPoint = in.readParcelable(Place.class.getClassLoader());
         listOfPoints = new ArrayList<LatLng>();
         in.readParcelableList(listOfPoints, LatLng.class.getClassLoader());
+        speed = in.readDouble();
     }
 
     public static final Creator<Route> CREATOR = new Creator<Route>() {
@@ -81,6 +84,14 @@ public class Route implements Parcelable {
 
     public void setListOfPoints(ArrayList<LatLng> listOfPoints) {this.listOfPoints = listOfPoints;}
 
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -93,5 +104,6 @@ public class Route implements Parcelable {
         parcel.writeParcelable(startingPoint, i);
         parcel.writeParcelable(endPoint, i);
         parcel.writeParcelableList(listOfPoints, i);
+        parcel.writeDouble(speed);
     }
 }
