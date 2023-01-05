@@ -356,7 +356,7 @@ public class ForegroundService extends Service {
 
         }
         // updates amplitudes list with the previous amplitude data
-        baseAmplitudesList = currentAmplitudes;
+//        baseAmplitudesList = currentAmplitudes;
     }
 
 
