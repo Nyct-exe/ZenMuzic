@@ -40,7 +40,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     private void savePreference(boolean state){
             SharedPreferences sharedPref = getActivity().getSharedPreferences("shared preferences", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putBoolean("savePreference", state);
+            editor.putBoolean("RECORD_AUDIO", state);
             editor.apply();
     }
 }
