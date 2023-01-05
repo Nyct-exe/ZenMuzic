@@ -24,6 +24,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.gson.Gson;
@@ -70,7 +71,7 @@ public class ForegroundService extends Service {
     private LocationCallback locationCallback;
     private double currentUserSpeed;
 
-    private double routeTolerance = 50;
+    private final float routeTolerance = 50;
     private EnvironmentalAudioRecorder environmentalAudioRecorder;
     private List<Integer> baseAmplitudesList = new ArrayList<>();
     private AudioManager audioManager;
@@ -95,7 +96,7 @@ public class ForegroundService extends Service {
         /*
         * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
          */
-        baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+//        baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
 
         // Gives controls of the phone's volume
         audioManager = (AudioManager) getApplicationContext().getSystemService(getBaseContext().AUDIO_SERVICE);
@@ -138,6 +139,28 @@ public class ForegroundService extends Service {
         return null;
     }
 
+    private Route getRouteBasedOnSpeedAndDistance() {
+        Route closestRoute = null;
+        float shortestDistance = (float) routeTolerance;
+        for (Route route: routes){
+            if(route.getListOfPoints().size() != 0) {
+                float shortestDistanceForRoute = Float.MAX_VALUE;
+                for(LatLng point : route.getListOfPoints()) {
+                    float[] routeResult = new float[3];
+                    Location.distanceBetween(point.latitude, point.longitude, lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), routeResult);
+                    if(routeResult[0] < shortestDistanceForRoute) {
+                        shortestDistanceForRoute = routeResult[0];
+                    }
+                }
+                if(shortestDistanceForRoute < shortestDistance && currentUserSpeed < route.getSpeed()) {
+                    closestRoute = route;
+                    shortestDistance = shortestDistanceForRoute;
+                }
+            }
+        }
+        return closestRoute;
+    }
+
     private void serviceThread() {
         new Thread(
                 new Runnable() {
@@ -145,16 +168,12 @@ public class ForegroundService extends Service {
                     @Override
                     public void run() {
                         while(true){
-                            // TODO: WRITE LOGIC WHAT HAPPENS IN THE FOREGROUND
-//                            Log.d("Foreground","Foreground Service is Running");
                             loadData();
-                            if(isSongFinishing(5000)){
-                                Log.d("Foreground","Song is Finishing");
-                                for(Route r: routes){
-                                    if(r.getPlaylist() != null){
-                                        savePlaylistUri(r.getPlaylist().getUri());
-                                        mSpotifyAppRemote.getPlayerApi().play(r.getPlaylist().getUri());
-                                    }
+                            if(isSongFinishing(500000)){
+                                Route route = getRouteBasedOnSpeedAndDistance();
+                                if(route != null && route.getPlaylist() != null) {
+                                    Log.d("Foreground","Playlist: "+ route.getPlaylist().getName());
+                                    mSpotifyAppRemote.getPlayerApi().play(route.getPlaylist().getUri());
                                 }
                                 // The service is too fast and sometimes manages to change playlist twice.
                                 try {
@@ -165,9 +184,9 @@ public class ForegroundService extends Service {
                             }
                             getCurrentSpeed();
                             Log.d("Foreground","Speed: "+currentUserSpeed);
-                            if(recordingPermission){
-                                adjustVolumeBasedOnEnvironment();
-                            }
+//                            if(recordingPermission){
+//                                adjustVolumeBasedOnEnvironment();
+//                            }
 
                         }
                     }
