@@ -93,7 +93,6 @@ public class ForegroundService extends Service {
         };
         createLocationRequest();
         getCurrentLocation();
-        environmentalAudioRecorder = new EnvironmentalAudioRecorder();
 
         /*
         * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
@@ -115,6 +114,18 @@ public class ForegroundService extends Service {
                 recordingPermission = extras.getBoolean("RecordingPermission");
                 locationPermissionGranted = extras.getBoolean("locationGranted");
             }
+        }
+
+        if(recordingPermission){
+            environmentalAudioRecorder = new EnvironmentalAudioRecorder();
+
+            /*
+             * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
+             */
+            baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+
+            // Gives controls of the phone's volume
+            audioManager = (AudioManager) getApplicationContext().getSystemService(getBaseContext().AUDIO_SERVICE);
         }
 
 
