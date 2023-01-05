@@ -110,7 +110,7 @@ public class EnvironmentalAudioRecorder {
         return -1;
     }
     /*
-    * Gets an avarage from a list of integers
+    * Gets an average from a list of integers
      */
 
     private float getAvg(List<Integer> list){
