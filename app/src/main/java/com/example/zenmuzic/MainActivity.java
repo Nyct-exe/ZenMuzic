@@ -20,15 +20,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.example.zenmuzic.navDrawerFragments.SettingsFragment;
 import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Spotify
     private static final int REQUEST_CODE = 1337;
-    private static final String CLIENT_ID = "e728ce73ce224bed8731b892dd710540";
+    private static final String CLIENT_ID = "b3ac30013ade499595f29bf035ab6526";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
     public String AUTH_TOKEN;
@@ -81,9 +80,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean writeExternalStragePermission;
 
     // UI
+    private Button songButton;
     private Button spotifyButton;
-    private Button setRouteButton;
 
+    private void updateUserConnectionBasedOnSpotifyStatus(boolean isConnected) {
+        ImageButton forwardsButton = findViewById(R.id.forwardsButton);
+        ImageButton backwardsButton = findViewById(R.id.backButton);
+        if (isConnected) {
+            forwardsButton.setVisibility(View.VISIBLE);
+            backwardsButton.setVisibility(View.VISIBLE);
+            songButton.setVisibility(View.VISIBLE);
+            spotifyButton.setVisibility(View.GONE);
+            getSupportActionBar().show();
+        }
+        else {
+            forwardsButton.setVisibility(View.GONE);
+            backwardsButton.setVisibility(View.GONE);
+            songButton.setVisibility(View.GONE);
+            spotifyButton.setVisibility(View.VISIBLE);
+            getSupportActionBar().hide();
+
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,8 +128,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         //Button Initialization
+        songButton = findViewById(R.id.songButton);
         spotifyButton = findViewById(R.id.spotifyButton);
-        setRouteButton = findViewById(R.id.setRouteButton);
+        spotifyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                authSpotify();
+            }
+        });
+        updateUserConnectionBasedOnSpotifyStatus(false);
     }
     //Lifecycle Controls
     @Override
@@ -185,7 +210,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onFailure(Throwable throwable) {
                         Log.e("MainActivity", throwable.getMessage(), throwable);
                         logoutItem.setTitle("Login To Spotify");
-                        setRouteButton.setEnabled(false);
                         // Something went wrong when attempting to connect! Handle errors here
                     }
                 });
@@ -197,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         /**
          * Starts a Foreground Service
          */
+        Log.d("MainActivity", (String.valueOf(isForegroundServiceRunning())));
         if(!isForegroundServiceRunning() && AUTH_TOKEN != null && SpotifyAppRemote.isSpotifyInstalled(this) ){
             // Starts a Service in the Foreground
             Intent serviceIntent = new Intent(this,ForegroundService.class);
@@ -205,11 +230,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             serviceIntent.putExtra("locationGranted",locationPermissionGranted);
             startForegroundService(serviceIntent);
         }
+        updateUserConnectionBasedOnSpotifyStatus(true);
     }
 
     /**
      * Subscribes to playerState and everytime a player state is changed the button text is updated.
-     * Updates text of SpotifyButton to show currently playing song
+     * Updates text of songButton to show currently playing song
      */
     private void syncMusicPlayerTrack(){
         if(mSpotifyAppRemote != null){
@@ -219,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .setEventCallback(playerState -> {
                         final Track track = playerState.track;
                         if (track != null) {
-                            spotifyButton.setText(track.name + " by " + track.artist.name);
+                            songButton.setText(track.name + " by " + track.artist.name);
                         }
                     });
         }
@@ -261,8 +287,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Start Route
     public void setRouteButton(View view){
-        Intent intent = new Intent(this, RouteRecycleView.class);
-        startActivity(intent);
+
     }
 
     public void backMusicButton(View view){
@@ -302,6 +327,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Handle navigation view item clicks here.
         try {
             switch (item.getItemId()) {
+                case R.id.routes: {
+                    Intent intent = new Intent(this, RouteRecycleView.class);
+                    startActivity(intent);
+                    break;
+                }
+
                 case R.id.nav_settings: {
                     Intent intent = new Intent(this,SettingsActivity.class);
                     startActivity(intent);
@@ -326,23 +357,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     break;
                 }
                 case R.id.nav_logout: {
-                    if( mSpotifyAppRemote.isConnected() == false){
-                        authSpotify();
-                        spotifyButton.setEnabled(true);
-                        setRouteButton.setEnabled(true);
-                        item.setTitle("Logout From Spotify");
-
-                    } else {
-                        AuthorizationClient.clearCookies(this);
-                        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
-                        item.setTitle("Login To Spotify");
-                        AUTH_TOKEN = null;
-                        ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(null);
-                        spotifyButton.setEnabled(false);
-                        setRouteButton.setEnabled(false);
-                        Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
-
-                    }
+                    AuthorizationClient.clearCookies(this);
+                    SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+                    item.setTitle("Login To Spotify");
+                    AUTH_TOKEN = null;
+                    ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(null);
+                    Toast.makeText(this, "Disconnected from Spotify", Toast.LENGTH_SHORT).show();
+                    updateUserConnectionBasedOnSpotifyStatus(false);
                 }
             }
         } catch (Exception e){
