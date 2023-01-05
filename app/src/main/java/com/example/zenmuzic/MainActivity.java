@@ -382,6 +382,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             locationPermissionGranted = true;
             recordingPermissionGranted = true;
             writeExternalStragePermission = true;
+            ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(true);
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -395,13 +396,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         locationPermissionGranted = false;
         recordingPermissionGranted = false;
         writeExternalStragePermission = false;
+        ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(false);
         if (requestCode
                 == REQUEST_PERMISSIONS) {// If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
                 locationPermissionGranted = true;
                 recordingPermissionGranted = true;
                 writeExternalStragePermission = true;
+                ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(true);
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
