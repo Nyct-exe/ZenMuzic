@@ -12,4 +12,5 @@ public class ZenMusicApplication extends Application {
     public void setAUTH_TOKEN(String AUTH_TOKEN) {
         this.AUTH_TOKEN = AUTH_TOKEN;
     }
+
 }

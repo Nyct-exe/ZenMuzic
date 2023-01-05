@@ -2,8 +2,6 @@ package com.example.zenmuzic;
 
 import static android.content.ContentValues.TAG;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,22 +10,21 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
+import com.example.zenmuzic.navDrawerFragments.SettingsFragment;
 import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -39,20 +36,16 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.internal.NavigationMenuItemView;
 import com.google.android.material.navigation.NavigationView;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
-import com.spotify.sdk.android.auth.LoginActivity;
 
 
 import java.util.Objects;
@@ -64,8 +57,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap gMap;
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private boolean locationPermissionGranted;
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private static final int REQUEST_PERMISSIONS = 1;
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private Location lastKnownLocation;
@@ -79,9 +71,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private SpotifyAppRemote mSpotifyAppRemote;
     public String AUTH_TOKEN;
 
+    // Permissions
+    private boolean locationPermissionGranted;
+    private boolean recordingPermissionGranted;
+    private boolean writeExternalStragePermission;
+
     // UI
     private Button spotifyButton;
     private Button setRouteButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +202,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Starts a Service in the Foreground
             Intent serviceIntent = new Intent(this,ForegroundService.class);
             serviceIntent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
+            serviceIntent.putExtra("RecordingPermission",false);
             serviceIntent.putExtra("locationGranted",locationPermissionGranted);
             startForegroundService(serviceIntent);
         }
@@ -283,12 +282,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
-        // TODO: Implement Navigation to Other Activities/Fragments
         try {
             switch (item.getItemId()) {
                 case R.id.nav_settings: {
-                    //do somthing
-                    Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(this,SettingsActivity.class);
+                    startActivity(intent);
                     break;
                 }
                 case R.id.nav_share: {
@@ -337,21 +335,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // MAP IMPLEMENTATION REF: https://developers.google.com/maps/documentation/android-sdk/current-place-tutorial
 
-    // Location Permissions
-    private void getLocationPermission() {
+    // Permissions Handling
+    private void getPermissions() {
         /*
-         * Request location permission, so that we can get the location of the
-         * device. The result of the permission request is handled by a callback,
+         * Request permission, so that we can get the location of the
+         * device and record enviromental sounds. The result of the permission request is handled by a callback,
          * onRequestPermissionsResult.
          */
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
             locationPermissionGranted = true;
+            recordingPermissionGranted = true;
+            writeExternalStragePermission = true;
         } else {
             ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSIONS);
         }
     }
     @Override
@@ -359,11 +364,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         locationPermissionGranted = false;
+        recordingPermissionGranted = false;
+        writeExternalStragePermission = false;
         if (requestCode
-                == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {// If request is cancelled, the result arrays are empty.
+                == REQUEST_PERMISSIONS) {// If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 locationPermissionGranted = true;
+                recordingPermissionGranted = true;
+                writeExternalStragePermission = true;
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -383,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 gMap.setMyLocationEnabled(false);
                 gMap.getUiSettings().setMyLocationButtonEnabled(false);
                 lastKnownLocation = null;
-                getLocationPermission();
+                getPermissions();
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());

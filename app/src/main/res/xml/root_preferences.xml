@@ -1,0 +1,14 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Experimental Settings">
+
+        <SwitchPreferenceCompat
+            app:key="RecordAudio"
+            app:summaryOff="Do not record environment audio"
+            app:summaryOn="Record environment audio and adjust volume based on environmental noise"
+            app:title="Environment Audio (BETA)"
+            app:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,11 +1,6 @@
 package com.example.zenmuzic;
 
-import static android.content.ContentValues.TAG;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
-
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,32 +8,22 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.zenmuzic.routeRecycleView.AbstractSerializer;
 import com.example.zenmuzic.routeRecycleView.Route;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -46,27 +31,20 @@ import com.google.gson.reflect.TypeToken;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.google.maps.android.PolyUtil;
 
 import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlayingContext;
-import se.michaelthelin.spotify.model_objects.specification.Paging;
-import se.michaelthelin.spotify.model_objects.specification.Playlist;
-import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
-import se.michaelthelin.spotify.requests.data.player.AddItemToUsersPlaybackQueueRequest;
 import se.michaelthelin.spotify.requests.data.player.GetInformationAboutUsersCurrentPlaybackRequest;
 import se.michaelthelin.spotify.requests.data.player.SkipUsersPlaybackToNextTrackRequest;
-import se.michaelthelin.spotify.requests.data.player.StartResumeUsersPlaybackRequest;
-import se.michaelthelin.spotify.requests.data.playlists.GetPlaylistRequest;
 
 public class ForegroundService extends Service {
 
@@ -92,6 +70,10 @@ public class ForegroundService extends Service {
     private double currentUserSpeed;
 
     private double routeTolerance = 50;
+    private EnvironmentalAudioRecorder environmentalAudioRecorder;
+    private List<Integer> baseAmplitudesList = new ArrayList<>();
+    private AudioManager audioManager;
+    private boolean recordingPermission;
 
 
     @Override
@@ -107,21 +89,34 @@ public class ForegroundService extends Service {
         };
         createLocationRequest();
         getCurrentLocation();
+        environmentalAudioRecorder = new EnvironmentalAudioRecorder();
+
+        /*
+        * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
+         */
+        baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+
+        // Gives controls of the phone's volume
+        audioManager = (AudioManager) getApplicationContext().getSystemService(getBaseContext().AUDIO_SERVICE);
+
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // GETTING THE AUTH TOKEN
-        Bundle extras = intent.getExtras();
-        if (extras != null) {
-             AUTH_TOKEN = extras.getString("AUTH_TOKEN");
-             locationPermissionGranted = extras.getBoolean("locationGranted");
+        if(intent != null){
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                AUTH_TOKEN = extras.getString("AUTH_TOKEN");
+                recordingPermission = extras.getBoolean("RecordingPermission");
+                locationPermissionGranted = extras.getBoolean("locationGranted");
+            }
         }
+
 
         spotifyApi = new SpotifyApi.Builder()
                 .setAccessToken(AUTH_TOKEN)
                 .build();
-
         linkSpotifyAndStartAThread();
 
         final String CHANNEL_ID = "Foreground Service";
@@ -167,6 +162,10 @@ public class ForegroundService extends Service {
                             }
                             getCurrentSpeed();
                             Log.d("Foreground","Speed: "+currentUserSpeed);
+                            if(recordingPermission){
+                                adjustVolumeBasedOnEnvironment();
+                            }
+
                         }
                     }
                 }
@@ -183,6 +182,7 @@ public class ForegroundService extends Service {
         if (routes == null) {
             routes = new ArrayList<>();
         }
+        recordingPermission = sharedPreferences.getBoolean("RECORD_AUDIO",false);
 
     }
 
@@ -271,6 +271,9 @@ public class ForegroundService extends Service {
         lastKnownLocation = location;
         Log.d("Foreground", "Location: " + location);
 
+        /*
+         * Left it here in case it keeps killing the app on the actual phone.
+         */
         // Notify anyone listening for broadcasts about the new location.
 //        Intent intent = new Intent(ACTION_BROADCAST);
 //        intent.putExtra(EXTRA_LOCATION, location);
@@ -319,6 +322,26 @@ public class ForegroundService extends Service {
                     }
                 });
     }
+
+    private void adjustVolumeBasedOnEnvironment(){
+        List<Integer> currentAmplitudes = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+        int response = environmentalAudioRecorder.isEnvironmentLoud(baseAmplitudesList,currentAmplitudes);
+        switch (response){
+            case -1:
+                audioManager.adjustVolume(AudioManager.ADJUST_LOWER,0);
+                break;
+            case 0:
+                audioManager.adjustVolume(AudioManager.ADJUST_SAME,0);
+                break;
+            case 1:
+                audioManager.adjustVolume(AudioManager.ADJUST_RAISE,0);
+                break;
+
+        }
+        // updates amplitudes list with the previous amplitude data
+        baseAmplitudesList = currentAmplitudes;
+    }
+
 
 
 

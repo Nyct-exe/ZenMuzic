@@ -14,9 +14,11 @@
     <string name="save_route">Save</string>
     <string name="delete_route">Delete</string>
     <string name="playlist_name_input">Please Select Playlist</string>
+    <string name="adjust_volume_based_on_environment_beta">Adjust Volume Based On Environment (Beta)</string>
 
     <string-array name="Trasnport">
         <item>Walking</item>
         <item>Car</item>
     </string-array>
+
 </resources>
