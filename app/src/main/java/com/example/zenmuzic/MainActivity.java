@@ -13,10 +13,14 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -290,8 +294,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     break;
                 }
                 case R.id.nav_share: {
-                    //do somthing
-                    Toast.makeText(this, "NOT IMPLEMENTED", Toast.LENGTH_SHORT).show();
+                    SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
+                    String currentPlaylistUri = sharedPreferences.getString("currentPlaylist",null);
+                    ClipboardManager clipboard = (ClipboardManager)
+                            getSystemService(Context.CLIPBOARD_SERVICE);
+
+                    if(currentPlaylistUri != null){
+                        String[] choppedUri = currentPlaylistUri.split(":");
+                        String playlistUrl = "https://open.spotify.com/playlist/";
+                        playlistUrl += choppedUri[2];
+                        ClipData clip = ClipData.newPlainText("Current Playlist", playlistUrl);
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(this, "Saved to Clipboard", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Currently No Playlist Assigned On Route", Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 }
                 case R.id.nav_logout: {

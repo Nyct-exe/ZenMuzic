@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -150,8 +151,10 @@ public class ForegroundService extends Service {
                             if(isSongFinishing(5000)){
                                 Log.d("Foreground","Song is Finishing");
                                 for(Route r: routes){
-                                    if(r.getPlaylist() != null)
+                                    if(r.getPlaylist() != null){
+                                        savePlaylistUri(r.getPlaylist().getUri());
                                         mSpotifyAppRemote.getPlayerApi().play(r.getPlaylist().getUri());
+                                    }
                                 }
                                 // The service is too fast and sometimes manages to change playlist twice.
                                 try {
@@ -172,6 +175,11 @@ public class ForegroundService extends Service {
         ).start();
 
     }
+    /*
+    *   Loads Data from sharedPreferences:
+    * Routes - All saved routes of the current user
+    * Permissions - currently only Record Audio
+     */
 
     private void loadData(){
         SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
@@ -184,6 +192,15 @@ public class ForegroundService extends Service {
         }
         recordingPermission = sharedPreferences.getBoolean("RECORD_AUDIO",false);
 
+    }
+    /*
+    *   Saves The latest playlist to preferences so it could be uses to generate a uri for sharing a playlist.
+     */
+    private void savePlaylistUri(String playlistUri){
+        SharedPreferences sharedPref = getBaseContext().getSharedPreferences("shared preferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("currentPlaylist",playlistUri);
+        editor.apply();
     }
 
     /*
