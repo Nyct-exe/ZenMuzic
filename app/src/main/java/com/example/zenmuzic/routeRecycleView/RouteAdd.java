@@ -163,7 +163,14 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
         findViewById(R.id.saveRoute).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finishRoute(false);
+                boolean routeNameCheck = !routeInput.getText().toString().equals("");
+                boolean routePlaylistCheck = route.getPlaylist() != null;
+                boolean routeStartPlace = route.getStartingPoint() != null && !route.getStartingPoint().getName().equals("");
+                boolean routeEndPlace = route.getEndPoint() != null && !route.getEndPoint().getName().equals("");
+                if (routeNameCheck && routePlaylistCheck && routeStartPlace && routeEndPlace) {
+                    route.setName(routeInput.getText().toString());
+                    finishRoute(false);
+                }
             }
         });
 
