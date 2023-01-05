@@ -7,6 +7,7 @@ import com.example.zenmuzic.BuildConfig;
 import com.example.zenmuzic.routeRecycleView.Route;
 import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.PolyUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -99,7 +100,7 @@ public class GetDirections extends AsyncTask<URL, String, String> {
             listOfLocations.add(createLatLng(steps.getJSONObject(0).getJSONObject("start_location")));
             for (int i = 0; i < steps.length(); i++) {
                 JSONObject step = steps.getJSONObject(i);
-                listOfLocations.add(createLatLng(step.getJSONObject("end_location")));
+                listOfLocations.addAll(PolyUtil.decode(step.getJSONObject("polyline").getString("points")));
             }
         }
         catch(JSONException e) {
