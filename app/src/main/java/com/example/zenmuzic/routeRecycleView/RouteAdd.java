@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -175,6 +176,8 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
                 if (routeNameCheck && routePlaylistCheck && routeStartPlace && routeEndPlace) {
                     route.setName(routeInput.getText().toString());
                     finishRoute(false);
+                } else {
+                    Toast.makeText(RouteAdd.this, "Missing Parameters", Toast.LENGTH_SHORT).show();
                 }
             }
         });
