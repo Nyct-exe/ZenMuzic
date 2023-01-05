@@ -148,9 +148,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void authSpotify(){
-        NavigationView navigationView = findViewById(R.id.nvView);
-        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_logout);
-
         //Auth
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
@@ -160,6 +157,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
 
+
+    }
+
+    private void ConnectSpotify(){
+        NavigationView navigationView = findViewById(R.id.nvView);
+        MenuItem logoutItem = navigationView.getMenu().findItem(R.id.nav_logout);
         //     Set the connection parameters
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(CLIENT_ID)
@@ -189,8 +192,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void connected() {
-        // Then we will write some more code here.
-//        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
 
         syncMusicPlayerTrack();
         /**
@@ -241,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     ((ZenMusicApplication) this.getApplication()).setAUTH_TOKEN(response.getAccessToken());
                     AUTH_TOKEN = response.getAccessToken();
                     Toast.makeText(this, "Authorised!!", Toast.LENGTH_SHORT).show();
+                    ConnectSpotify();
                     break;
 
                 // Auth flow returned an error
