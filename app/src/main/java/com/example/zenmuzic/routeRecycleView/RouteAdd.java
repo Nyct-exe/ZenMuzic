@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.zenmuzic.BuildConfig;
 import com.example.zenmuzic.LocationHandler;
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.interfaces.AsyncResponse;
 import com.example.zenmuzic.mapAPI.GetDirections;
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
 import com.google.android.gms.common.api.Status;
@@ -40,8 +41,10 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
+public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, AsyncResponse {
     private Route route;
     private TextInputEditText routeInput;
     private TextView playlistText;
@@ -105,6 +108,7 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 route.setStartingPoint(place);
+                getListOfLocationsForRoute(route);
             }
 
             @Override
@@ -116,6 +120,7 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 route.setEndPoint(place);
+                getListOfLocationsForRoute(route);
             }
 
             @Override
@@ -230,15 +235,13 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setRotateGesturesEnabled(true);
         mMap.clear();
         // Existing Route
         if(route.getStartingPoint() != null && route.getEndPoint() != null){
             LatLng startingPoint = route.getStartingPoint().getLatLng();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startingPoint, 14));
-            MarkerOptions options = new MarkerOptions();
-            options.position(route.getStartingPoint().getLatLng());
-            mMap.addMarker(options);
-
             PolylineOptions lineOptions = new PolylineOptions();
             lineOptions.addAll(route.getListOfPoints());
             lineOptions.width(12);
@@ -255,15 +258,25 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
 
     }
 
-    private void updateUI(){
+    private void getListOfLocationsForRoute(Route route) {
+        if(route.getStartingPoint() != null && route.getEndPoint() != null) {
+            LatLng origin = route.getStartingPoint().getLatLng();
+            LatLng destination = route.getEndPoint().getLatLng();
+            URL url = GetDirections.createURL(origin, destination);
+            GetDirections getDirections = new GetDirections(route, null);
+            getDirections.delegate = this;
+            getDirections.execute(url);
+
+        }
+    }
+
+    @Override
+    public void processFinish(String output) {
         mMap.clear();
         if(route.getStartingPoint() != null && route.getEndPoint() != null){
             LatLng startingPoint = route.getStartingPoint().getLatLng();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startingPoint, 14));
             MarkerOptions options = new MarkerOptions();
-            options.position(route.getStartingPoint().getLatLng());
-            mMap.addMarker(options);
-
             PolylineOptions lineOptions = new PolylineOptions();
             lineOptions.addAll(route.getListOfPoints());
             lineOptions.width(12);
@@ -271,6 +284,6 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
             lineOptions.geodesic(false);
             mMap.addPolyline(lineOptions);
         }
-    }
 
+    }
 }

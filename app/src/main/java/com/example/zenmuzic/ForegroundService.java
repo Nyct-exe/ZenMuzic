@@ -91,7 +91,6 @@ public class ForegroundService extends Service {
         };
         createLocationRequest();
         getCurrentLocation();
-        environmentalAudioRecorder = new EnvironmentalAudioRecorder();
 
         /*
         * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
@@ -113,6 +112,18 @@ public class ForegroundService extends Service {
                 recordingPermission = extras.getBoolean("RecordingPermission");
                 locationPermissionGranted = extras.getBoolean("locationGranted");
             }
+        }
+
+        if(recordingPermission){
+            environmentalAudioRecorder = new EnvironmentalAudioRecorder();
+
+            /*
+             * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
+             */
+            baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+
+            // Gives controls of the phone's volume
+            audioManager = (AudioManager) getApplicationContext().getSystemService(getBaseContext().AUDIO_SERVICE);
         }
 
 
@@ -169,7 +180,7 @@ public class ForegroundService extends Service {
                     public void run() {
                         while(true){
                             loadData();
-                            if(isSongFinishing(500000)){
+                            if(isSongFinishing(5000)){
                                 Route route = getRouteBasedOnSpeedAndDistance();
                                 if(route != null && route.getPlaylist() != null) {
                                     Log.d("Foreground","Playlist: "+ route.getPlaylist().getName());

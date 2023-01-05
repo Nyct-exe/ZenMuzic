@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.zenmuzic.BuildConfig;
+import com.example.zenmuzic.interfaces.AsyncResponse;
 import com.example.zenmuzic.routeRecycleView.Route;
 import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.maps.model.LatLng;
@@ -23,6 +24,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class GetDirections extends AsyncTask<URL, String, String> {
+    public AsyncResponse delegate = null;
     private RouteRecycleView routeRecycleView;
     private Route route;
 
@@ -114,6 +116,12 @@ public class GetDirections extends AsyncTask<URL, String, String> {
         super.onPostExecute(result);
         ArrayList<LatLng> listOfLocations = parseRouteJSON(result);
         route.setListOfPoints(listOfLocations);
-        routeRecycleView.saveData();
+        // This allows this async to be used without a recyclerView
+        if(routeRecycleView != null){
+            routeRecycleView.saveData();
+        } else {
+            delegate.processFinish("Finished");
+        }
+
     }
 }
