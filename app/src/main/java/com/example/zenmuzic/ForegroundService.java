@@ -184,9 +184,9 @@ public class ForegroundService extends Service {
                             }
                             getCurrentSpeed();
                             Log.d("Foreground","Speed: "+currentUserSpeed);
-//                            if(recordingPermission){
-//                                adjustVolumeBasedOnEnvironment();
-//                            }
+                            if(recordingPermission){
+                                adjustVolumeBasedOnEnvironment();
+                            }
 
                         }
                     }
