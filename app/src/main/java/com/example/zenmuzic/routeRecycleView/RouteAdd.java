@@ -2,6 +2,8 @@ package com.example.zenmuzic.routeRecycleView;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,19 +19,29 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zenmuzic.BuildConfig;
+import com.example.zenmuzic.LocationHandler;
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.mapAPI.GetDirections;
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Locale;
 
-public class RouteAdd extends AppCompatActivity {
+public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback {
     private Route route;
     private TextInputEditText routeInput;
     private TextView playlistText;
@@ -39,9 +51,14 @@ public class RouteAdd extends AppCompatActivity {
     private ActivityResultLauncher<Intent> playlistResultLauncher;
     private int position;
     private String spinnerValue;
+    private GoogleMap mMap;
+    private LocationHandler locationHandler;
+    private Location currentLocation;
     // SPEEDS FOR TRANSPORT
     private static final double WALKING = 3;
     private static final double CAR = 9;
+
+
 
     private void handleIntent(Intent intent) {
         Route extraRoute = intent.getParcelableExtra("ROUTE_OBJECT");
@@ -173,11 +190,20 @@ public class RouteAdd extends AppCompatActivity {
                     // Do Nothing
             }
         });
+        // Does not work as intended since it needs to wait for success
+        // LocationData
+        locationHandler = new LocationHandler(this);
+        currentLocation = locationHandler.getLastKnownLocation();
 
-
+        // Map
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.addRouteMap);
+        mapFragment.getMapAsync(this);
 
 
     }
+
+
 
     public void openPlaylistForResult(Intent intent) {
         playlistResultLauncher.launch(intent);
@@ -191,4 +217,53 @@ public class RouteAdd extends AppCompatActivity {
         setResult(RESULT_OK, intent);
         finish();
     }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.clear();
+        // Existing Route
+        if(route.getStartingPoint() != null && route.getEndPoint() != null){
+            LatLng startingPoint = route.getStartingPoint().getLatLng();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startingPoint, 14));
+            MarkerOptions options = new MarkerOptions();
+            options.position(route.getStartingPoint().getLatLng());
+            mMap.addMarker(options);
+
+            PolylineOptions lineOptions = new PolylineOptions();
+            lineOptions.addAll(route.getListOfPoints());
+            lineOptions.width(12);
+            lineOptions.color(Color.RED);
+            lineOptions.geodesic(false);
+            mMap.addPolyline(lineOptions);
+        } else { // Route is being created
+            if(currentLocation != null){
+                LatLng startingPoint = new LatLng(currentLocation.getLatitude(),currentLocation.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startingPoint, 14));
+            }
+
+        }
+
+    }
+
+    private void updateUI(){
+        mMap.clear();
+        if(route.getStartingPoint() != null && route.getEndPoint() != null){
+            LatLng startingPoint = route.getStartingPoint().getLatLng();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startingPoint, 14));
+            MarkerOptions options = new MarkerOptions();
+            options.position(route.getStartingPoint().getLatLng());
+            mMap.addMarker(options);
+
+            PolylineOptions lineOptions = new PolylineOptions();
+            lineOptions.addAll(route.getListOfPoints());
+            lineOptions.width(12);
+            lineOptions.color(Color.RED);
+            lineOptions.geodesic(false);
+            mMap.addPolyline(lineOptions);
+        }
+    }
+
 }
