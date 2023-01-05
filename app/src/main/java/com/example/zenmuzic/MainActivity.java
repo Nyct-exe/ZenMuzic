@@ -132,12 +132,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStop() {
         super.onStop();
-        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(isFinishing()){
+            SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+        }
     }
 
     private void authSpotify(){
@@ -184,21 +191,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void connected() {
         // Then we will write some more code here.
 //        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
-        /**
-         * Subscribes to playerState and everytime a playerstate is changed the button text is updated.
-         * Updates text of SpotifyButton to show currently playing song
-         */
-        if(mSpotifyAppRemote != null){
-            // Subscribe to PlayerState
-            mSpotifyAppRemote.getPlayerApi()
-                    .subscribeToPlayerState()
-                    .setEventCallback(playerState -> {
-                        final Track track = playerState.track;
-                        if (track != null) {
-                            spotifyButton.setText(track.name + " by " + track.artist.name);
-                        }
-                    });
-        }
+
+        syncMusicPlayerTrack();
         /**
          * Starts a Foreground Service
          */
@@ -209,6 +203,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             serviceIntent.putExtra("RecordingPermission",false);
             serviceIntent.putExtra("locationGranted",locationPermissionGranted);
             startForegroundService(serviceIntent);
+        }
+    }
+
+    /**
+     * Subscribes to playerState and everytime a player state is changed the button text is updated.
+     * Updates text of SpotifyButton to show currently playing song
+     */
+    private void syncMusicPlayerTrack(){
+        if(mSpotifyAppRemote != null){
+            // Subscribe to PlayerState
+            mSpotifyAppRemote.getPlayerApi()
+                    .subscribeToPlayerState()
+                    .setEventCallback(playerState -> {
+                        final Track track = playerState.track;
+                        if (track != null) {
+                            spotifyButton.setText(track.name + " by " + track.artist.name);
+                        }
+                    });
         }
     }
 
