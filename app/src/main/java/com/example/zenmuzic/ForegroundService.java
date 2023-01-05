@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import se.michaelthelin.spotify.SpotifyApi;
@@ -76,6 +77,7 @@ public class ForegroundService extends Service {
     private List<Integer> baseAmplitudesList = new ArrayList<>();
     private AudioManager audioManager;
     private boolean recordingPermission;
+    private String currentPlaylist;
 
 
     @Override
@@ -120,7 +122,6 @@ public class ForegroundService extends Service {
                 .setAccessToken(AUTH_TOKEN)
                 .build();
         linkSpotifyAndStartAThread();
-
         final String CHANNEL_ID = "Foreground Service";
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID,CHANNEL_ID, NotificationManager.IMPORTANCE_LOW);
 
@@ -169,10 +170,11 @@ public class ForegroundService extends Service {
                     public void run() {
                         while(true){
                             loadData();
-                            if(isSongFinishing(500000)){
+                            if(isSongFinishing(5000)){
                                 Route route = getRouteBasedOnSpeedAndDistance();
-                                if(route != null && route.getPlaylist() != null) {
+                                if(route != null && route.getPlaylist() != null && !route.getPlaylist().getUri().equals(currentPlaylist)) {
                                     Log.d("Foreground","Playlist: "+ route.getPlaylist().getName());
+                                    mSpotifyAppRemote.getPlayerApi().setShuffle(true);
                                     mSpotifyAppRemote.getPlayerApi().play(route.getPlaylist().getUri());
                                 }
                                 // The service is too fast and sometimes manages to change playlist twice.
@@ -347,6 +349,12 @@ public class ForegroundService extends Service {
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.d("ForegroundService", "Connected! Yay!");
                         serviceThread();
+                        mSpotifyAppRemote.getPlayerApi().subscribeToPlayerContext()
+                                .setEventCallback(playerContext -> {
+                                    currentPlaylist = playerContext.uri;
+                                })
+                                .setErrorCallback(throwable -> {
+                                });
 
                     }
 
