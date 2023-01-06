@@ -3,10 +3,12 @@ package com.example.zenmuzic;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.zenmuzic.interfaces.AsyncResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -14,7 +16,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-public class LocationHandler {
+import java.net.URL;
+
+public class LocationHandler extends AsyncTask<URL, String, String>  {
 
     // The entry point to the Fused Location Provider.
     // GPS
@@ -24,6 +28,8 @@ public class LocationHandler {
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private boolean LOCATION_PERMISSION_GRANTED;
+
+    public AsyncResponse delegate = null;
 
 
 
@@ -90,14 +96,15 @@ public class LocationHandler {
             public void onSuccess(Location location) {
                 if (location != null) {
                     lastKnownLocation = location;
+                    delegate.getLocation(location);
 
                 }
             }
         });
     }
 
-    public Location getLastKnownLocation() {
-        return lastKnownLocation;
+    @Override
+    protected String doInBackground(URL... urls) {
+        return null;
     }
-
 }

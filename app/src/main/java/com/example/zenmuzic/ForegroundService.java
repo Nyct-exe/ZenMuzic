@@ -188,8 +188,13 @@ public class ForegroundService extends Service {
                                     mSpotifyAppRemote.getPlayerApi().setShuffle(true);
                                     mSpotifyAppRemote.getPlayerApi().play(route.getPlaylist().getUri());
                                     savePlaylistUri(route.getPlaylist().getUri());
+//                                    saveCurrentRoute(route);
                                     firstTimeFlag = false;
                                 }
+//                                if(route != null){
+//                                    saveCurrentRoute(route);
+//                                    firstTimeFlag = false;
+//                                }
                                 // The service is too fast and sometimes manages to change playlist twice.
                                 try {
                                     TimeUnit.SECONDS.sleep(1);
@@ -234,6 +239,19 @@ public class ForegroundService extends Service {
         SharedPreferences sharedPref = getBaseContext().getSharedPreferences("shared preferences", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("currentPlaylist",playlistUri);
+        editor.apply();
+    }
+
+    /*
+    * Saves current route to the preferences
+     */
+
+    private void saveCurrentRoute(Route route){
+        SharedPreferences sharedPref = getBaseContext().getSharedPreferences("shared preferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
+        String json = gson.toJson(route);
+        editor.putString("currentRoute", json);
         editor.apply();
     }
 

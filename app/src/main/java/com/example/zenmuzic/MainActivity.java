@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,9 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.example.zenmuzic.interfaces.AsyncResponse;
+import com.example.zenmuzic.routeRecycleView.AbstractSerializer;
+import com.example.zenmuzic.routeRecycleView.Route;
 import com.example.zenmuzic.routeRecycleView.RouteRecycleView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -36,11 +40,15 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.android.material.navigation.NavigationView;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -51,10 +59,14 @@ import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, AsyncResponse {
 
+    private Route currentRoute;
+    private ArrayList<Route> allRoutes;
     public DrawerLayout drawerLayout;
     public ActionBarDrawerToggle actionBarDrawerToggle;
     private GoogleMap gMap;
@@ -77,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Permissions
     private boolean locationPermissionGranted;
     private boolean recordingPermissionGranted;
-    private boolean writeExternalStragePermission;
+    private boolean writeExternalStoragePermission;
 
     // UI
     private Button songButton;
@@ -152,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             new SpotifyMissingDialogFragment().show(getSupportFragmentManager(),"DialogBox");
         }
 
+
     }
 
     @Override
@@ -162,6 +175,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onResume() {
         super.onResume();
+        LocationHandler locationHandler = new LocationHandler(this);
+        locationHandler.delegate = this;
+        locationHandler.execute();
+        if(gMap != null){
+            drawAllRoutesOnMap();
+        }
     }
 
     @Override
@@ -285,10 +304,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    // Start Route
-    public void setRouteButton(View view){
-
-    }
 
     public void backMusicButton(View view){
         if(mSpotifyAppRemote != null){
@@ -316,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap.getUiSettings().setMapToolbarEnabled(false);
         updateLocationUI();
         getDeviceLocation();
-//        requestPermissions(new String[]{"android.permission.ACCESS_FINE_LOCATION","android.permission.ACCESS_COARSE_LOCATION"},0);
+        drawAllRoutesOnMap();
     }
 
     @Override
@@ -392,21 +407,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
          * onRequestPermissionsResult.
          */
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
-                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
-                && (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-            locationPermissionGranted = true;
-            recordingPermissionGranted = true;
-            writeExternalStragePermission = true;
-            ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(true);
-        } else {
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                locationPermissionGranted = true;
+                ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(true);
+        }
+        if(ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED){
+                recordingPermissionGranted = true;
+        }
+        if(ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+            writeExternalStoragePermission = true;
+        }
+        if(!locationPermissionGranted
+                || !recordingPermissionGranted
+                || !writeExternalStoragePermission){
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_PERMISSIONS);
+        } else {
+            updateLocationUI();
         }
     }
     @Override
@@ -415,18 +435,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                            @NonNull int[] grantResults) {
         locationPermissionGranted = false;
         recordingPermissionGranted = false;
-        writeExternalStragePermission = false;
+        writeExternalStoragePermission = false;
         ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(false);
         if (requestCode
                 == REQUEST_PERMISSIONS) {// If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    && grantResults[1] == PackageManager.PERMISSION_GRANTED
-                    && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 locationPermissionGranted = true;
-                recordingPermissionGranted = true;
-                writeExternalStragePermission = true;
                 ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(true);
+            }
+            if(grantResults.length > 0
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED){
+                recordingPermissionGranted = true;
+            }
+            if(grantResults.length > 0
+                    && grantResults[2] == PackageManager.PERMISSION_GRANTED){
+                writeExternalStoragePermission = true;
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -470,6 +494,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                         new LatLng(lastKnownLocation.getLatitude(),
                                                 lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+
                             }
                         } else {
                             Log.d(TAG, "Current location is null. Using defaults.");
@@ -496,4 +521,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
+    @Override
+    public void processFinish(String result) {
+        // Do Nothing
+    }
+
+    @Override
+    public void getLocation(Location location) {
+        // Handle Users Location
+        lastKnownLocation = location;
+        gMap.getUiSettings().setMyLocationButtonEnabled(true);
+    }
+
+    private void drawAllRoutesOnMap(){
+        // Draw all Routes on map
+        gMap.clear();
+        loadRoutes();
+        for(Route r:allRoutes){
+            if(r != null){
+                if(r.getStartingPoint() != null && r.getEndPoint() != null){
+                    PolylineOptions lineOptions = new PolylineOptions();
+                    lineOptions.addAll(r.getListOfPoints());
+                    lineOptions.width(12);
+                    lineOptions.color(Color.RED);
+                    lineOptions.geodesic(false);
+                    lineOptions.clickable(true);
+                    gMap.addPolyline(lineOptions);
+                }
+            }
+        }
+    }
+
+    private void loadRoutes(){
+        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
+        String json = sharedPreferences.getString("routes list", null);
+        Type type = new TypeToken<ArrayList<Route>>() {}.getType();
+        allRoutes = gson.fromJson(json, type);
+        if (allRoutes == null) {
+            allRoutes = new ArrayList<>();
+        }
+    }
+
+
+    /*
+    * Meant to be used to only get one current route
+    * Currently Disabled
+     */
+
+    private void getCurrentRoute(){
+        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
+        Gson gson = new GsonBuilder().registerTypeAdapter(Place.class, new AbstractSerializer()).create();
+        String json = sharedPreferences.getString("currentRoute", null);
+        Type type = new TypeToken<Route>() {}.getType();
+        currentRoute = gson.fromJson(json, type);
+    }
 }

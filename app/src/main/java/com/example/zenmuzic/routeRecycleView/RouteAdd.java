@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zenmuzic.BuildConfig;
-import com.example.zenmuzic.LocationHandler;
 import com.example.zenmuzic.R;
 import com.example.zenmuzic.interfaces.AsyncResponse;
 import com.example.zenmuzic.mapAPI.GetDirections;
@@ -56,7 +55,6 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
     private int position;
     private String spinnerValue;
     private GoogleMap mMap;
-    private LocationHandler locationHandler;
     private Location currentLocation;
     // SPEEDS FOR TRANSPORT
     private static final double WALKING = 3;
@@ -205,10 +203,6 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
                     // Do Nothing
             }
         });
-        // Does not work as intended since it needs to wait for success
-        // LocationData
-        locationHandler = new LocationHandler(this);
-        currentLocation = locationHandler.getLastKnownLocation();
 
         // Map
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -288,5 +282,10 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
             mMap.addPolyline(lineOptions);
         }
 
+    }
+
+    @Override
+    public void getLocation(Location location) {
+        // DO NOTHING
     }
 }
