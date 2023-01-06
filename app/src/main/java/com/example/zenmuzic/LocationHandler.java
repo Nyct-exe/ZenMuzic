@@ -48,8 +48,6 @@ public class LocationHandler extends AsyncTask<URL, String, String>  {
 
             createLocationRequest();
             getCurrentLocation(activity);
-        } else {
-            Toast.makeText(activity, "Location Permissions Missing", Toast.LENGTH_SHORT).show();
         }
 
     }
