@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zenmuzic.BuildConfig;
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.ZenMusicApplication;
 import com.example.zenmuzic.interfaces.AsyncResponse;
 import com.example.zenmuzic.mapAPI.GetDirections;
 import com.example.zenmuzic.playlistRecyclerView.PlaylistRecyclerView;
@@ -63,7 +64,7 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
 
 
     private void handleIntent(Intent intent) {
-        Route extraRoute = intent.getParcelableExtra("ROUTE_OBJECT");
+        Route extraRoute = ((ZenMusicApplication) getApplication()).getRoute();
         if (extraRoute != null) {
             route = extraRoute;
             routeInput.setText(route.getName());
@@ -159,7 +160,7 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
 
 
                 Intent intent = new Intent(RouteAdd.this, PlaylistRecyclerView.class);
-                intent.putExtra("ROUTE_OBJECT", route);
+                ((ZenMusicApplication) getApplication()).setRoute(route);
                 openPlaylistForResult(intent);
             }
         });
@@ -212,15 +213,13 @@ public class RouteAdd extends AppCompatActivity implements OnMapReadyCallback, A
 
     }
 
-
-
     public void openPlaylistForResult(Intent intent) {
         playlistResultLauncher.launch(intent);
     }
 
     public void finishRoute(boolean delete) {
         Intent intent = new Intent();
-        intent.putExtra("ROUTE_OBJECT", route);
+        ((ZenMusicApplication) getApplication()).setRoute(route);
         intent.putExtra("DELETE", delete);
         intent.putExtra("POSITION", position);
         setResult(RESULT_OK, intent);

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zenmuzic.R;
+import com.example.zenmuzic.ZenMusicApplication;
 import com.example.zenmuzic.mapAPI.GetDirections;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.Place;
@@ -81,7 +82,7 @@ public class RouteRecycleView extends AppCompatActivity {
                             routes.remove(position);
                         }
                         else {
-                            Route dataRoute = data.getParcelableExtra("ROUTE_OBJECT");
+                            Route dataRoute = ((ZenMusicApplication) this.getApplication()).getRoute();
                             routes.set(position, dataRoute);
                             getListOfLocationsForRoute(routes.get(position));
                         }
@@ -116,7 +117,7 @@ public class RouteRecycleView extends AppCompatActivity {
 
     public void openRouteAdd(Route route, int position) {
         Intent intent = new Intent(RouteRecycleView.this, RouteAdd.class);
-        intent.putExtra("ROUTE_OBJECT", route);
+        ((ZenMusicApplication) this.getApplication()).setRoute(route);
         intent.putExtra("POSITION", position);
         routeResultLauncher.launch(intent);
     }
