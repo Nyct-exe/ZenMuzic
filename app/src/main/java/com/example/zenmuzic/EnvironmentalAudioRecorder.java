@@ -1,10 +1,16 @@
 package com.example.zenmuzic;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
 
@@ -26,30 +32,32 @@ public class EnvironmentalAudioRecorder {
     private List<Integer> lastAmplitudesList = new ArrayList<>();
 
     // Constants
-    private final static int RECORDING_TIME = 5; // Seconds
-    private final static int CHANGE_VOLUME_BASELINE = 3; // Db
+    private final static int RECORDING_TIME = 3; // Seconds
+    private final static int CHANGE_VOLUME_BASELINE = 2; // Db
 
     private void startRecording(){
-        mRecorder = new MediaRecorder();
+        if (mFileName != null){
+            mRecorder = new MediaRecorder();
 
-        mFileName = Environment.getExternalStorageDirectory().getAbsolutePath();
-        mFileName += "/EnvironmentalRecording.3gp";
+            // Setting up the recorder
+            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mRecorder.setOutputFile(mFileName);
 
-        // Setting up the recorder
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mRecorder.setOutputFile(mFileName);
+            try {
+                mRecorder.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("Recorder","Recorder Preparation failed");
+            }
 
-        try {
-            mRecorder.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.d("Recorder","Recorder Preparation failed");
+            mRecorder.start();
+            Log.d("Recorder","Recording has started");
+        } else {
+            Log.d("Recorder","Missing Recording PATH");
         }
 
-        mRecorder.start();
-        Log.d("Recorder","Recording has started");
     }
 
     private void stopRecording(){
@@ -60,6 +68,7 @@ public class EnvironmentalAudioRecorder {
     }
 
     public List<Integer> getAmplitudesList(Context context){
+        setUpStorage(context);
         amplituda = new Amplituda(context);
         AmplitudaProcessingOutput<String> processingOutput;
 
@@ -101,14 +110,25 @@ public class EnvironmentalAudioRecorder {
         float previousAmplitudesAvg = getAvg(previousAmplitudes);
         float currentAmplitudesAvg = getAvg(currentAmplitudes);
 
-        if(Math.abs(previousAmplitudesAvg - currentAmplitudesAvg ) <= CHANGE_VOLUME_BASELINE ){
+        Log.d("EnvironmentalAudioRecorder","CurrentAmpAvg: " + previousAmplitudesAvg);
+        Log.d("EnvironmentalAudioRecorder","PreviousAmpAvg: " + currentAmplitudesAvg);
+
+        if(Math.abs(currentAmplitudesAvg - previousAmplitudesAvg ) <= CHANGE_VOLUME_BASELINE ){
             return 0;
         }
-        if(previousAmplitudesAvg - currentAmplitudesAvg >= 0){
+        if(currentAmplitudesAvg - previousAmplitudesAvg >= 0){
             return 1;
         }
         return -1;
     }
+
+
+   private void setUpStorage(Context context){
+       mFileName = context.getExternalCacheDir().getAbsolutePath();
+       mFileName += "/EnvironmentalRecording.3gp";
+   }
+
+
     /*
     * Gets an average from a list of integers
      */

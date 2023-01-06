@@ -66,7 +66,7 @@ public class LocationHandler extends AsyncTask<URL, String, String>  {
 
     private void onNewLocation(Location location) {
         lastKnownLocation = location;
-        Log.d("Foreground", "Location: " + location);
+        Log.d("LocationHandler", "Location: " + location);
 
         /*
          * Left it here in case it keeps killing the app on the actual phone.

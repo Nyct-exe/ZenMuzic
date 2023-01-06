@@ -93,10 +93,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean locationPermissionGranted;
     private boolean recordingPermissionGranted;
     private boolean writeExternalStoragePermission;
+    private boolean readExternalStoragePermission;
 
     // UI
     private Button songButton;
     private Button spotifyButton;
+
 
     private void updateUserConnectionBasedOnSpotifyStatus(boolean isConnected) {
         ImageButton forwardsButton = findViewById(R.id.forwardsButton);
@@ -249,6 +251,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Intent serviceIntent = new Intent(this,ForegroundService.class);
             serviceIntent.putExtra("AUTH_TOKEN",AUTH_TOKEN);
             serviceIntent.putExtra("RecordingPermission",false);
+            serviceIntent.putExtra("writePermission",writeExternalStoragePermission);
+            serviceIntent.putExtra("readingPermission",readExternalStoragePermission);
             serviceIntent.putExtra("locationGranted",locationPermissionGranted);
             startForegroundService(serviceIntent);
         }
@@ -422,15 +426,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
             writeExternalStoragePermission = true;
         }
+        if(ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+            readExternalStoragePermission = true;
+        }
         if(!locationPermissionGranted
                 || !recordingPermissionGranted
-                || !writeExternalStoragePermission){
+                || !writeExternalStoragePermission
+                || !readExternalStoragePermission){
             ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.RECORD_AUDIO,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_PERMISSIONS);
-        } else {
+        }
+        if(locationPermissionGranted){
             updateLocationUI();
         }
+
     }
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -439,6 +450,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         locationPermissionGranted = false;
         recordingPermissionGranted = false;
         writeExternalStoragePermission = false;
+        readExternalStoragePermission = false;
         ((ZenMusicApplication) this.getApplication()).setLOCATION_PERMISSION(false);
         if (requestCode
                 == REQUEST_PERMISSIONS) {// If request is cancelled, the result arrays are empty.
@@ -454,6 +466,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(grantResults.length > 0
                     && grantResults[2] == PackageManager.PERMISSION_GRANTED){
                 writeExternalStoragePermission = true;
+            }
+            if(grantResults.length > 0
+                    && grantResults[3] == PackageManager.PERMISSION_GRANTED){
+                readExternalStoragePermission = true;
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);

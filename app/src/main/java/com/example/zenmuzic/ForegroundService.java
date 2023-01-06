@@ -46,7 +46,6 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlayingContext;
 import se.michaelthelin.spotify.requests.data.player.GetInformationAboutUsersCurrentPlaybackRequest;
-import se.michaelthelin.spotify.requests.data.player.SkipUsersPlaybackToNextTrackRequest;
 
 public class ForegroundService extends Service {
 
@@ -76,8 +75,11 @@ public class ForegroundService extends Service {
     private List<Integer> baseAmplitudesList = new ArrayList<>();
     private AudioManager audioManager;
     private boolean recordingPermission;
+    private boolean writeExternalStoragePermission;
+    private boolean readExternalStoragePermission;
     private String currentPlaylist;
     private boolean firstTimeFlag = true;
+    private boolean firstTimeRecordingFlag = true;
 
 
     @Override
@@ -94,11 +96,6 @@ public class ForegroundService extends Service {
         createLocationRequest();
         getCurrentLocation();
 
-        /*
-        * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
-         */
-//        baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
-
         // Gives controls of the phone's volume
         audioManager = (AudioManager) getApplicationContext().getSystemService(getBaseContext().AUDIO_SERVICE);
 
@@ -113,10 +110,13 @@ public class ForegroundService extends Service {
                 AUTH_TOKEN = extras.getString("AUTH_TOKEN");
                 recordingPermission = extras.getBoolean("RecordingPermission");
                 locationPermissionGranted = extras.getBoolean("locationGranted");
+                writeExternalStoragePermission = extras.getBoolean("writePermission");
+                readExternalStoragePermission = extras.getBoolean("readingPermission");
+
             }
         }
 
-        if(recordingPermission){
+        if(recordingPermission && writeExternalStoragePermission && readExternalStoragePermission){
             environmentalAudioRecorder = new EnvironmentalAudioRecorder();
 
             /*
@@ -184,7 +184,7 @@ public class ForegroundService extends Service {
                             if(isSongFinishing(5000) || firstTimeFlag == true){
                                 Route route = getRouteBasedOnSpeedAndDistance();
                                 if(route != null && route.getPlaylist() != null && !route.getPlaylist().getUri().equals(currentPlaylist)) {
-                                    Log.d("Foreground","Playlist: "+ route.getPlaylist().getName());
+                                    Log.d("ForegroundService","Playlist: "+ route.getPlaylist().getName());
                                     mSpotifyAppRemote.getPlayerApi().setShuffle(true);
                                     mSpotifyAppRemote.getPlayerApi().play(route.getPlaylist().getUri());
                                     savePlaylistUri(route.getPlaylist().getUri());
@@ -203,8 +203,17 @@ public class ForegroundService extends Service {
                                 }
                             }
                             getCurrentSpeed();
-                            Log.d("Foreground","Speed: "+currentUserSpeed);
-                            if(recordingPermission){
+                            Log.d("ForegroundService","Speed: "+currentUserSpeed);
+                            if(recordingPermission && writeExternalStoragePermission && readExternalStoragePermission){
+
+                                if(firstTimeRecordingFlag){
+                                    environmentalAudioRecorder = new EnvironmentalAudioRecorder();
+                                    /*
+                                     * Gets Sample Of 5 Seconds environment audio to use as basis for volume control
+                                     */
+                                    baseAmplitudesList = environmentalAudioRecorder.getAmplitudesList(getBaseContext());
+                                    firstTimeRecordingFlag = false;
+                                }
                                 adjustVolumeBasedOnEnvironment();
                             }
 
@@ -323,7 +332,7 @@ public class ForegroundService extends Service {
 
     private void onNewLocation(Location location) {
         lastKnownLocation = location;
-        Log.d("Foreground", "Location: " + location);
+        Log.d("ForegroundService", "Location: " + location);
 
         /*
          * Left it here in case it keeps killing the app on the actual phone.
@@ -396,17 +405,21 @@ public class ForegroundService extends Service {
         switch (response){
             case -1:
                 audioManager.adjustVolume(AudioManager.ADJUST_LOWER,0);
+                audioManager.adjustVolume(AudioManager.ADJUST_LOWER,0);
+                audioManager.adjustVolume(AudioManager.ADJUST_LOWER,0);
                 break;
             case 0:
                 audioManager.adjustVolume(AudioManager.ADJUST_SAME,0);
                 break;
             case 1:
                 audioManager.adjustVolume(AudioManager.ADJUST_RAISE,0);
+                audioManager.adjustVolume(AudioManager.ADJUST_RAISE,0);
+                audioManager.adjustVolume(AudioManager.ADJUST_RAISE,0);
                 break;
 
         }
         // updates amplitudes list with the previous amplitude data
-//        baseAmplitudesList = currentAmplitudes;
+        baseAmplitudesList = currentAmplitudes;
     }
 
 

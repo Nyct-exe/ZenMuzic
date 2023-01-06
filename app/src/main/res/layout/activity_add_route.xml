@@ -89,22 +89,22 @@
         tools:context=".routeRecycleView.RouteAdd" />
 
     <Button
-        android:id="@+id/saveRoute"
+        android:id="@+id/deleteRoute"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         android:layout_marginBottom="5dp"
-        android:text="@string/save_route"
+        android:text="@string/delete_route"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/deleteRoute"
+        android:id="@+id/saveRoute"
         android:layout_width="150dp"
         android:layout_height="0dp"
         android:layout_marginEnd="5dp"
         android:layout_marginBottom="5dp"
-        android:text="@string/delete_route"
+        android:text="@string/save_route"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
