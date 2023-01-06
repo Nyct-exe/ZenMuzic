@@ -545,7 +545,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     lineOptions.width(12);
                     lineOptions.color(Color.RED);
                     lineOptions.geodesic(false);
-                    lineOptions.clickable(true);
                     gMap.addPolyline(lineOptions);
                 }
             }
