@@ -61,7 +61,10 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, AsyncResponse {
 
@@ -537,13 +540,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Draw all Routes on map
         gMap.clear();
         loadRoutes();
+        List<Integer> colorList = Arrays.asList(Color.RED, Color.BLUE, Color.BLACK, Color.GREEN, Color.MAGENTA);
         for(Route r:allRoutes){
             if(r != null){
                 if(r.getStartingPoint() != null && r.getEndPoint() != null){
                     PolylineOptions lineOptions = new PolylineOptions();
                     lineOptions.addAll(r.getListOfPoints());
                     lineOptions.width(12);
-                    lineOptions.color(Color.RED);
+                    Random rand = new Random(r.getName().hashCode());
+                    lineOptions.color(colorList.get(rand.nextInt(colorList.size())));
                     lineOptions.geodesic(false);
                     gMap.addPolyline(lineOptions);
                 }
