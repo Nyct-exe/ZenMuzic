@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import se.michaelthelin.spotify.SpotifyApi;
@@ -78,6 +77,7 @@ public class ForegroundService extends Service {
     private AudioManager audioManager;
     private boolean recordingPermission;
     private String currentPlaylist;
+    private boolean firstTimeFlag = true;
 
 
     @Override
@@ -181,12 +181,14 @@ public class ForegroundService extends Service {
                     public void run() {
                         while(true){
                             loadData();
-                            if(isSongFinishing(5000)){
+                            if(isSongFinishing(5000) || firstTimeFlag == true){
                                 Route route = getRouteBasedOnSpeedAndDistance();
                                 if(route != null && route.getPlaylist() != null && !route.getPlaylist().getUri().equals(currentPlaylist)) {
                                     Log.d("Foreground","Playlist: "+ route.getPlaylist().getName());
                                     mSpotifyAppRemote.getPlayerApi().setShuffle(true);
                                     mSpotifyAppRemote.getPlayerApi().play(route.getPlaylist().getUri());
+                                    savePlaylistUri(route.getPlaylist().getUri());
+                                    firstTimeFlag = false;
                                 }
                                 // The service is too fast and sometimes manages to change playlist twice.
                                 try {
@@ -263,8 +265,6 @@ public class ForegroundService extends Service {
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
-//                    currentLocation[0] = new LatLng(location.getLatitude(),location.getLongitude());
-//                    Log.d("Foreground", "CurrentLocation: " + currentLocation[0]);
                     lastKnownLocation = location;
 
                 }
@@ -289,19 +289,6 @@ public class ForegroundService extends Service {
                     }
                 });
             }
-    }
-
-    public void skipUsersPlaybackToNextTrack() {
-        SkipUsersPlaybackToNextTrackRequest skipUsersPlaybackToNextTrackRequest = spotifyApi
-                .skipUsersPlaybackToNextTrack()
-                .build();
-        try {
-            final String string = skipUsersPlaybackToNextTrackRequest.execute();
-
-            System.out.println("Null: " + string);
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
     }
 
     /*
@@ -359,13 +346,20 @@ public class ForegroundService extends Service {
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         mSpotifyAppRemote = spotifyAppRemote;
                         Log.d("ForegroundService", "Connected! Yay!");
-                        serviceThread();
+
                         mSpotifyAppRemote.getPlayerApi().subscribeToPlayerContext()
                                 .setEventCallback(playerContext -> {
                                     currentPlaylist = playerContext.uri;
                                 })
                                 .setErrorCallback(throwable -> {
+                                    Log.d("ForegroundService","Error: "+throwable.getMessage());
                                 });
+
+
+                        /*
+                        * Starts a thread that handles the foreground
+                         */
+                        serviceThread();
 
                     }
 
